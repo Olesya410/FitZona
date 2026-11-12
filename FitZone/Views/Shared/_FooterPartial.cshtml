@@ -1,0 +1,29 @@
+﻿@inject FitZone.Data.AppDbContext db
+@{
+    var c = db.Contacts.FirstOrDefault() ?? new Contact();
+    var footerPhone = c.Phone ?? "";
+    var footerPhoneLink = "tel:" + new string(footerPhone.Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
+    var footerEmail = c.Email ?? "";
+    var footerEmailLink = "mailto:" + footerEmail;
+}
+<footer class="footer">
+    <div class="container">
+        <div class="footer__grid">
+            <div><img src="~/img/logo.png" alt="FITZONE"><p>Двигайся. Расти. Живи.</p></div>
+            <div>
+                <h4>Навигация</h4>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="About">О фитнес-центре</a></li>
+                    <li><a asp-controller="Home" asp-action="Services">Услуги</a></li>
+                    <li><a asp-controller="Home" asp-action="Trainers">Тренеры</a></li>
+                    <li><a asp-controller="Home" asp-action="Booking">Запись на тренировку</a></li>
+                    <li><a asp-controller="Home" asp-action="Reviews">Отзывы</a></li>
+                    <li><a asp-controller="Home" asp-action="Contacts">Контакты</a></li>
+                </ul>
+            </div>
+            <div><h4>Контакты</h4><ul><li><span>@c.Address</span></li><li><a href="@footerPhoneLink">@footerPhone</a></li><li><a href="@footerEmailLink">@footerEmail</a></li><li><span>@c.WorkingHours</span></li></ul></div>
+            <div><h4>Мы в соцсетях</h4><div class="socials"><a href="#">Telegram</a><a href="#">VK</a><a href="#">Instagram</a></div></div>
+        </div>
+        <div class="footer__bottom"><span>© 2026 FITZONE</span></div>
+    </div>
+</footer>

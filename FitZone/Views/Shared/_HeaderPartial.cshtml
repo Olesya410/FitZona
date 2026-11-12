@@ -1,0 +1,33 @@
+@{
+    // Текст и страница кнопки справа. Страницы кабинетов (Account, Manager, Admin) задают их через ViewData.
+    // На остальных страницах: «Войти» для гостя и кабинет по роли для вошедшего.
+    var cabinetText = ViewData["CabinetText"] as string ?? "";
+    var cabinetAction = ViewData["CabinetAction"] as string ?? "";
+    if (cabinetText == "" || cabinetAction == "")
+    {
+        cabinetText = "Войти";
+        cabinetAction = "Login";
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole(Roles.Admin)) { cabinetText = "Админ-панель"; cabinetAction = "Admin"; }
+            else if (User.IsInRole(Roles.Manager)) { cabinetText = "Панель менеджера"; cabinetAction = "Manager"; }
+            else { cabinetText = "Личный кабинет"; cabinetAction = "Account"; }
+        }
+    }
+}
+<header class="header">
+    <div class="container header__inner">
+        <a class="logo" asp-controller="Home" asp-action="Index"><img src="~/img/logo.png" alt="FITZONE Fitness Center"></a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle"><label class="burger" for="nav-toggle" aria-label="Меню"><span></span><span></span><span></span></label>
+        <nav class="nav">
+            <a asp-controller="Home" asp-action="About">О фитнес-центре</a>
+            <a asp-controller="Home" asp-action="Services">Услуги</a>
+            <a asp-controller="Home" asp-action="Trainers">Тренеры</a>
+            <a asp-controller="Home" asp-action="Booking">Запись на тренировку</a>
+            <a asp-controller="Home" asp-action="Reviews">Отзывы</a>
+            <a asp-controller="Home" asp-action="Contacts">Контакты</a>
+            <a class="btn btn--pink btn--mobile" asp-controller="Home" asp-action="@cabinetAction">@cabinetText</a>
+        </nav>
+        <a class="btn btn--pink btn--header" asp-controller="Home" asp-action="@cabinetAction">@cabinetText</a>
+    </div>
+</header>

@@ -1,0 +1,50 @@
+﻿@{
+    ViewData["Title"] = "О фитнес-центре";
+}
+
+<section class="page-hero"><div class="container"><div><h1>О FITZONE</h1><p>Фитнес-центр, где движение приносит радость.</p></div><img src="~/img/cat-stretch.png" alt=""></div></section>
+<section class="section"><div class="container about-grid">
+ <div><h2>История</h2>
+  <ul class="timeline">
+   <li><b>2019</b><br>Открыли первый зал и собрали команду из трёх тренеров.</li>
+   <li><b>2022</b><br>Добавили студию йоги и пилатеса.</li>
+   <li><b>2024</b><br>Обновили оборудование и запустили зону кардио.</li>
+   <li><b>2026</b><br>Запустили онлайн-запись на тренировки.</li>
+  </ul></div>
+ <div class="art-panel" role="img" aria-label="Графика в фирменных цветах"></div>
+</div></section>
+<section class="section section--mint"><div class="container">
+ <h2>Миссия и ценности</h2>
+ <p class="lead">Мы хотим, чтобы движение стало привычкой, которая даёт энергию и гармонию.</p>
+ <div class="values">
+  <div class="value"><svg class="motif" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="50" cy="50" r="40"/><path d="M10 50h80"/><circle cx="50" cy="30" r="9" fill="currentColor" stroke="none"/></svg><h3>Забота</h3><p>Мы бережно относимся к здоровью и подбираем нагрузку под вас.</p></div>
+  <div class="value"><svg class="motif" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M8 92A84 84 0 0 1 92 8M8 70A62 62 0 0 1 70 8M8 48A40 40 0 0 1 48 8"/></svg><h3>Энергия</h3><p>Тренировки должны давать силы, а не отнимать их.</p></div>
+  <div class="value"><svg class="motif" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M50 4 61 39 96 50 61 61 50 96 39 61 4 50 39 39Z" fill="currentColor" stroke="none"/></svg><h3>Уважение</h3><p>Новичкам и опытным у нас одинаково комфортно.</p></div>
+ </div>
+</div></section>
+<section class="section"><div class="container">
+ <h2>Преимущества</h2>
+ <div class="grid grid--4">
+  <article class="card"><h3>Опытные тренеры</h3><p>Сертификаты и практика от 6 лет.</p></article>
+  <article class="card"><h3>Небольшие группы</h3><p>До 12 человек, чтобы тренер видел каждого.</p></article>
+  <article class="card"><h3>Онлайн-запись</h3><p>Выбор времени и тренера за пару минут.</p></article>
+  <article class="card"><h3>Удобный график</h3><p>Занятия с 07:00 до 22:00.</p></article>
+ </div>
+</div></section>
+<section class="section section--dark"><div class="container">
+ <h2>Инфраструктура и оборудование</h2>
+ <p class="lead">Тренажёры и свободные веса, зона кардио, студия для йоги и пилатеса, раздевалки с душевыми и шкафчиками, лаундж-зона.</p>
+ <div class="gallery">
+  <div>Тренажёрный зал</div><div>Студия йоги</div><div>Зона кардио</div><div>Лаундж-зона</div>
+ </div>
+ <p class="muted" style="margin-top:14px">Здесь будут фотографии помещений FITZONE.</p>
+</div></section>
+<section class="section"><div class="container">
+ <h2>Команда и профессионализм</h2>
+ <p class="lead">Все тренеры имеют профильное образование и регулярно проходят обучение. Мы следим за новыми методиками и применяем только то, что безопасно и работает.</p>
+ <a class="btn btn--dark" asp-controller="Home" asp-action="Trainers">Познакомиться с тренерами</a>
+</div></section>
+<section class="section section--white"><div class="container motivation">
+ <img src="~/img/cat-lotus.png" alt="Маскот FITZONE в позе лотоса">
+ <div><h2>Начни с первого шага</h2><p class="lead">Мы подскажем, с чего начать и как не сорваться.</p><a class="btn btn--pink" asp-controller="Home" asp-action="Booking">Записаться на тренировку</a></div>
+</div></section>

@@ -1,0 +1,27 @@
+﻿@model List<Service>
+@{
+    ViewData["Title"] = "Услуги";
+}
+
+<section class="page-hero"><div class="container"><div><h1>Наши услуги</h1><p>Выберите направление по цели и настроению. Если сомневаетесь, начните с пробного занятия.</p></div><img src="~/img/cat-bottle.png" alt=""></div></section>
+<section class="section"><div class="container"><div class="bento" id="svcFull">
+ @for (int i = 0; i < Model.Count; i++)
+ {
+  var s = Model[i];
+  var tileClass = $"tile tile--{ServiceStyle.Color(i)} tile--big span-{ServiceStyle.SpanFull(i)}";
+  var tileId = "service-" + s.Id;
+  <article class="@tileClass" id="@tileId">@Html.Raw(ServiceStyle.Icon(i))
+   <div class="tile__body">
+    <div class="meta">
+     <span class="chip">@s.DurationMinutes мин</span>
+     @if (s.MaxGroupSize != null)
+     {
+      <span class="chip">группа до @s.MaxGroupSize чел.</span>
+     }
+    </div>
+    <h3>@s.Name</h3><p>@s.Description</p>
+   </div>
+   <div class="tile__foot"><span class="price">@s.PricePerSession.ToString("0") ₽ <small>/ занятие</small></span><a class="btn btn--tile" asp-controller="Home" asp-action="Booking" asp-route-service="@s.Id">Записаться</a></div>
+  </article>
+ }
+</div></div></section>

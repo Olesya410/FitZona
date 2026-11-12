@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Личный кабинет";
+    ViewData["CabinetText"] = "Личный кабинет";
+    ViewData["CabinetAction"] = "Account";
+}
+
+<section class="page-hero"><div class="container"><div><h1>Личный кабинет</h1><p>Ваши записи и профиль в одном месте.</p></div><img src="~/img/cat-thumb.png" alt=""></div></section>
+<section class="section"><div class="container">
+ <div id="userView" class="cabinet">
+  <aside class="panel profile-card">
+   <img src="~/img/logo.png" alt="FITZONE" style="height:44px;margin:0 auto 16px">
+   <h3 id="pName">Анастасия Иванова</h3><p class="muted" id="pEmail">user@@fitzone.ru</p>
+   <form class="form" id="profileForm" method="post" style="text-align:left">
+    <div class="field"><label for="pfName">Имя</label><input id="pfName" name="name" type="text" value="Анастасия Иванова" required minlength="2"><p class="error"></p></div>
+    <div class="field"><label for="pfPhone">Телефон</label><input id="pfPhone" name="phone" type="tel" value="+7 900 123-45-67" pattern="\+?[\d\s()\-]{10,18}" title="Неверный формат телефона"><p class="error"></p></div>
+    <button class="btn btn--dark btn--sm" type="submit">Сохранить</button>
+   </form>
+   <div style="margin-top:16px"><form asp-controller="Home" asp-action="Logout" method="post" style="display:inline"><button class="btn btn--outline btn--sm" type="submit">Выйти</button></form></div>
+  </aside>
+  <div class="panel tabgroup">
+   <input class="tab-radio" type="radio" name="tab" id="tab-up" checked><input class="tab-radio" type="radio" name="tab" id="tab-hist">
+   <div class="tabs"><label class="tab" for="tab-up">Предстоящие записи</label><label class="tab" for="tab-hist">История</label></div>
+   <ul class="list" data-pane="up" id="upList">
+    <li><span><b>Йога</b><br><small>12.11.2026, 18:00 · Анна Волкова</small></span>
+     <span><span class="status status--ok">Подтверждена</span> <form method="post" style="display:inline"><input type="hidden" name="cancelId" value="103"><button class="btn btn--outline btn--sm" type="submit">Отменить</button></form></span></li>
+   </ul>
+   <ul class="list" data-pane="hist" id="histList">
+    <li><span><b>Йога</b><br><small>21.10.2026, 18:00 · Анна Волкова</small></span>
+     <span><span class="status status--ok">Проведена</span> </span></li>
+    <li><span><b>Пилатес</b><br><small>28.10.2026, 18:00 · Анна Волкова</small></span>
+     <span><span class="status status--ok">Проведена</span> </span></li>
+   </ul>
+   <p class="muted"><small>Отмена записи возможна не позднее чем за 24 часа до начала.</small></p>
+  </div>
+ </div>
+</div></section>

@@ -1,0 +1,31 @@
+﻿@model Contact
+@{
+    ViewData["Title"] = "Контакты";
+    var phone = Model.Phone ?? "";
+    var phoneLink = "tel:" + new string(phone.Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
+    var email = Model.Email ?? "";
+    var emailLink = "mailto:" + email;
+}
+
+<section class="page-hero"><div class="container"><div><h1>Мы всегда на связи</h1><p>Позвоните, напишите или приходите — мы рады любому вопросу.</p></div><img src="~/img/cat-bottle.png" alt=""></div></section>
+<section class="section"><div class="container grid grid--2">
+ <div>
+  <ul class="contact-list">
+   <li><b>Адрес</b><span>@Model.Address</span></li>
+   <li><b>Телефон</b><a href="@phoneLink">@phone</a></li>
+   <li><b>Электронная почта</b><a href="@emailLink">@email</a></li>
+   <li><b>Время работы</b><span>@Model.WorkingHours</span></li>
+   <li><b>Соцсети</b><div class="socials"><a href="#">Telegram</a><a href="#">VK</a><a href="#">Instagram</a></div></li>
+  </ul>
+ </div>
+ <iframe class="map" title="Карта проезда" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=37.55%2C55.73%2C37.68%2C55.78&amp;layer=mapnik"></iframe>
+</div></section>
+<section class="section section--white"><div class="container"><div class="panel" style="max-width:720px;margin:auto">
+ <h2>Обратная связь</h2>
+ <form class="form" id="contactForm" method="post">
+  <div class="field"><label for="cName">Имя</label><input id="cName" name="name" required minlength="2"><p class="error"></p></div>
+  <div class="field"><label for="cContact">Телефон или e-mail</label><input id="cContact" name="contact" required pattern="(\+?[\d\s()\-]{10,18})|([^\s@@]+@@[^\s@@]+\.[^\s@@]{2,})" title="Телефон или e-mail в верном формате"><p class="error"></p></div>
+  <div class="field"><label for="cMessage">Сообщение</label><textarea id="cMessage" name="message" required minlength="5"></textarea><p class="error"></p></div>
+  <button class="btn btn--pink" type="submit">Отправить сообщение</button>
+ </form>
+</div></div></section>

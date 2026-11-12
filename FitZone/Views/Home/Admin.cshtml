@@ -1,0 +1,261 @@
+﻿@{
+    ViewData["Title"] = "Админ-панель";
+    ViewData["CabinetText"] = "Админ-панель";
+    ViewData["CabinetAction"] = "Admin";
+}
+
+<section class="page-hero"><div class="container"><div><h1>Админ-панель</h1><p>Полный доступ: заявки, отзывы, услуги, тренеры, расписание, пользователи и контакты сайта.</p></div><img src="~/img/cat-stretch.png" alt=""></div></section>
+<section class="section"><div class="container">
+ <div id="panel">
+  <p>Вы вошли как <b id="whoami">Администратор</b> · роль: <b>Администратор</b> <a class="btn btn--outline btn--sm" style="margin-left:10px" asp-controller="Home" asp-action="Index">Выйти</a></p>
+  <div class="panel tabgroup">
+   <input class="tab-radio" type="radio" name="tab" id="tab-req" checked><input class="tab-radio" type="radio" name="tab" id="tab-mod"><input class="tab-radio" type="radio" name="tab" id="tab-svc"><input class="tab-radio" type="radio" name="tab" id="tab-tr"><input class="tab-radio" type="radio" name="tab" id="tab-sch"><input class="tab-radio" type="radio" name="tab" id="tab-usr"><input class="tab-radio" type="radio" name="tab" id="tab-set">
+   <div class="tabs"><label class="tab" for="tab-req">Заявки</label><label class="tab" for="tab-mod">Отзывы</label><label class="tab" for="tab-svc">Услуги</label><label class="tab" for="tab-tr">Тренеры</label><label class="tab" for="tab-sch">Расписание</label><label class="tab" for="tab-usr">Пользователи и роли</label><label class="tab" for="tab-set">Контакты и настройки</label></div>
+   <div data-pane="req"><form method="post"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Контакт</th><th>Услуга</th><th>Тренер</th><th>Дата и время</th><th>Статус</th><th></th></tr></thead><tbody id="reqBody">
+      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td>Йога</td><td>Анна Волкова</td><td>21.10.2026 18:00</td>
+      <td><select name="status_101"><option>Ожидает подтверждения</option><option>Подтверждена</option><option>Отменена</option><option selected>Проведена</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delReq" value="101">Удалить</button></td></tr>
+      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td>Пилатес</td><td>Анна Волкова</td><td>28.10.2026 18:00</td>
+      <td><select name="status_102"><option>Ожидает подтверждения</option><option>Подтверждена</option><option>Отменена</option><option selected>Проведена</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delReq" value="102">Удалить</button></td></tr>
+      <tr><td>Олег Смирнов</td><td>+7 911 000-11-22</td><td>Силовые тренировки</td><td>Максим Орлов</td><td>10.11.2026 10:30</td>
+      <td><select name="status_104"><option selected>Ожидает подтверждения</option><option>Подтверждена</option><option>Отменена</option><option>Проведена</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delReq" value="104">Удалить</button></td></tr>
+      <tr><td>Марина Белова</td><td>marina@@example.com</td><td>Кардио и HIIT</td><td>Елена Северина</td><td>11.11.2026 19:30</td>
+      <td><select name="status_105"><option>Ожидает подтверждения</option><option selected>Подтверждена</option><option>Отменена</option><option>Проведена</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delReq" value="105">Удалить</button></td></tr>
+      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td>Йога</td><td>Анна Волкова</td><td>12.11.2026 18:00</td>
+      <td><select name="status_103"><option>Ожидает подтверждения</option><option selected>Подтверждена</option><option>Отменена</option><option>Проведена</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delReq" value="103">Удалить</button></td></tr>
+   </tbody></table></div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить статусы</button></p></form></div>
+   <div data-pane="mod"><h4>На модерации</h4><ul class="list" id="modList"><li>Новых отзывов на модерации нет</li></ul><h4 style="margin-top:30px">Опубликованные отзывы</h4><form method="post"><ul class="list" id="pubList">
+      <li><span><b>Ольга К.</b> <span class="stars" aria-label="Оценка 5 из 5">★★★★★<span class="off"></span></span> <small>28.10.2026</small><br><small>Хожу на йогу к Анне уже полгода. Спина перестала болеть, а настроение стало лучше. Очень уютный зал.</small></span>
+      <button class="btn btn--outline btn--sm" type="submit" name="delReview" value="1">Удалить</button></li>
+      <li><span><b>Дмитрий П.</b> <span class="stars" aria-label="Оценка 5 из 5">★★★★★<span class="off"></span></span> <small>15.10.2026</small><br><small>Максим объяснил технику приседа и становой так, что я наконец понял, что делал неправильно. Рекомендую.</small></span>
+      <button class="btn btn--outline btn--sm" type="submit" name="delReview" value="2">Удалить</button></li>
+      <li><span><b>Екатерина М.</b> <span class="stars" aria-label="Оценка 4 из 5">★★★★<span class="off">★</span></span> <small>02.10.2026</small><br><small>HIIT у Елены — это огонь! Тяжело, но интересно. Хотелось бы побольше вечерних групп.</small></span>
+      <button class="btn btn--outline btn--sm" type="submit" name="delReview" value="3">Удалить</button></li>
+      <li><span><b>Сергей Л.</b> <span class="stars" aria-label="Оценка 5 из 5">★★★★★<span class="off"></span></span> <small>20.09.2026</small><br><small>Чистые раздевалки, современные тренажёры, никакой толкотни. Записаться онлайн очень просто.</small></span>
+      <button class="btn btn--outline btn--sm" type="submit" name="delReview" value="4">Удалить</button></li>
+      <li><span><b>Анна Т.</b> <span class="stars" aria-label="Оценка 4 из 5">★★★★<span class="off">★</span></span> <small>05.09.2026</small><br><small>Пилатес мне подошёл идеально. Минус один: в час пик немного шумно в холле.</small></span>
+      <button class="btn btn--outline btn--sm" type="submit" name="delReview" value="5">Удалить</button></li>
+      <li><span><b>Виктор Н.</b> <span class="stars" aria-label="Оценка 3 из 5">★★★<span class="off">★★</span></span> <small>19.08.2026</small><br><small>Хороший зал, но в субботу пришлось ждать начала занятия минут десять. Тренер отработал отлично.</small></span>
+      <button class="btn btn--outline btn--sm" type="submit" name="delReview" value="6">Удалить</button></li>
+   </ul></form></div>
+   <div data-pane="svc"><p><a class="btn btn--pink btn--sm" href="#edit-newsvc">+ Добавить услугу</a></p><form method="post"><div class="table-wrap"><table><thead><tr><th>Услуга</th><th>Длительность</th><th>Цена</th><th></th></tr></thead><tbody id="svcBody">
+      <tr><td>Силовые тренировки</td><td>60 мин</td><td>900 ₽</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-strength">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delSvc" value="strength">Удалить</button></td></tr>
+      <tr><td>Йога</td><td>75 мин</td><td>800 ₽</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-yoga">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delSvc" value="yoga">Удалить</button></td></tr>
+      <tr><td>Кардио и HIIT</td><td>45 мин</td><td>700 ₽</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-hiit">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delSvc" value="hiit">Удалить</button></td></tr>
+      <tr><td>Пилатес</td><td>60 мин</td><td>850 ₽</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-pilates">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delSvc" value="pilates">Удалить</button></td></tr>
+      <tr><td>Стретчинг</td><td>45 мин</td><td>600 ₽</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-stretch">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delSvc" value="stretch">Удалить</button></td></tr>
+      <tr><td>Персональная тренировка</td><td>60 мин</td><td>2500 ₽</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-personal">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delSvc" value="personal">Удалить</button></td></tr>
+   </tbody></table></div></form></div>
+   <div data-pane="tr"><p><a class="btn btn--pink btn--sm" href="#edit-newtr">+ Добавить тренера</a></p>
+      <form method="post"><div class="table-wrap"><table><thead><tr>
+         <th>Тренер</th>
+         <th>Специализация</th>
+         <th>Опыт</th>
+         <th></th>
+      </tr></thead>
+      <tbody id="trBody">
+      <tr><td><img class="mini-photo" src="~/img/trainer-anna.svg" alt=""> Анна Волкова</td><td>Йога и пилатес</td><td>8 лет</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-anna">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delTr" value="anna">Удалить</button></td></tr>
+      <tr><td><img class="mini-photo" src="~/img/trainer-maxim.jpg" alt=""> Максим Орлов</td><td>Силовые тренировки</td><td>10 лет</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-maxim">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delTr" value="maxim">Удалить</button></td></tr>
+      <tr><td><img class="mini-photo" src="~/img/trainer-elena.svg" alt=""> Елена Северина</td><td>Кардио и HIIT</td><td>6 лет</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-elena">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delTr" value="elena">Удалить</button></td></tr>
+      <tr><td><img class="mini-photo" src="~/img/trainer-igor.svg" alt=""> Игорь Мирный</td><td>Стретчинг и восстановление</td><td>12 лет</td>
+      <td><a class="btn btn--dark btn--sm" href="#edit-igor">Изменить</a> <button class="btn btn--outline btn--sm" type="submit" name="delTr" value="igor">Удалить</button></td></tr>
+   </tbody></table></div></form></div>
+   <div data-pane="sch">
+    <h4>Время занятий</h4><form method="post"><div class="slots" id="timeChips"><span class="slot selected">09:00 <button class="chip-x" type="submit" name="delTime" value="09:00" aria-label="Убрать 09:00">×</button></span><span class="slot selected">10:30 <button class="chip-x" type="submit" name="delTime" value="10:30" aria-label="Убрать 10:30">×</button></span><span class="slot selected">12:00 <button class="chip-x" type="submit" name="delTime" value="12:00" aria-label="Убрать 12:00">×</button></span><span class="slot selected">14:00 <button class="chip-x" type="submit" name="delTime" value="14:00" aria-label="Убрать 14:00">×</button></span><span class="slot selected">16:00 <button class="chip-x" type="submit" name="delTime" value="16:00" aria-label="Убрать 16:00">×</button></span><span class="slot selected">18:00 <button class="chip-x" type="submit" name="delTime" value="18:00" aria-label="Убрать 18:00">×</button></span><span class="slot selected">19:30 <button class="chip-x" type="submit" name="delTime" value="19:30" aria-label="Убрать 19:30">×</button></span></div></form>
+    <form class="inline-form" id="timeForm" method="post"><input type="time" name="newTime" required><button class="btn btn--dark btn--sm" type="submit">Добавить время</button></form>
+    <h4 style="margin-top:30px">Закрытые дни</h4><p class="muted"><small>Воскресенье — выходной всегда. Здесь можно закрыть запись на другие даты, например на праздники.</small></p>
+    <ul class="list" id="closedList"><li class="muted">Закрытых дней нет</li></ul>
+    <form class="inline-form" id="closedForm" method="post"><input type="date" name="newClosed" required><button class="btn btn--dark btn--sm" type="submit">Закрыть день</button></form>
+   </div>
+   <div data-pane="usr"><form method="post"><div class="table-wrap"><table><thead><tr><th>Имя</th><th>E-mail</th><th>Роль</th><th></th></tr></thead><tbody id="usrBody">
+      <tr><td>Администратор</td><td>admin@@fitzone.ru</td><td><select name="role_admin@@fitzone.ru" disabled title="Свою роль менять нельзя"><option>Пользователь</option><option>Менеджер</option><option selected>Администратор</option></select></td><td></td></tr>
+      <tr><td>Мария Менеджер</td><td>manager@@fitzone.ru</td><td><select name="role_manager@@fitzone.ru"><option>Пользователь</option><option selected>Менеджер</option><option>Администратор</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delUser" value="manager@@fitzone.ru">Удалить</button></td></tr>
+      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td><select name="role_user@@fitzone.ru"><option selected>Пользователь</option><option>Менеджер</option><option>Администратор</option></select></td><td><button class="btn btn--outline btn--sm" type="submit" name="delUser" value="user@@fitzone.ru">Удалить</button></td></tr>
+   </tbody></table></div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить роли</button></p></form></div>
+   <div data-pane="set"><form class="form form--2" id="settingsForm" method="post"><div class="field"><label for="st_address">Адрес</label><input id="st_address" name="address" value="г. Москва, ул. Спортивная, 12" required><p class="error"></p></div><div class="field"><label for="st_phone">Телефон</label><input id="st_phone" name="phone" value="+7 (495) 000-00-00" required><p class="error"></p></div><div class="field"><label for="st_email">Электронная почта</label><input id="st_email" name="email" value="info@@fitzone.ru" required><p class="error"></p></div><div class="field"><label for="st_hours">Время работы</label><input id="st_hours" name="hours" value="Пн–Сб 07:00–22:00, Вс 09:00–20:00" required><p class="error"></p></div>
+    <div class="field field--full"><button class="btn btn--pink" type="submit">Сохранить настройки</button></div></form></div>
+  </div>
+ </div>
+</div></section>
+<div class="modal" id="edit-strength">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+   <!-- Это правильная карточка без поля преимущества -->
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить услугу</h3>
+   <div class="field"><label>Название</label><input type="text" name="name" value="Силовые тренировки" required ></div>
+   <div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="60" required min="10"></div>
+   <div class="field"><label>Цена, ₽</label><input type="number" name="price" value="900" required min="0"></div>
+   <div class="field"><label>Короткое описание (для карточки на главной)</label>
+      <input type="text" name="short" value="Работа с весами и тренажёрами под контролем тренера." required ></div>
+      <div class="field"><label>Подробное описание</label>
+      <textarea name="desc" required>Групповое занятие в тренажёрном зале: базовые упражнения, правильная техника и прогрессия нагрузки.</textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+
+
+
+
+<div class="modal" id="edit-yoga">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить услугу</h3>
+   <div class="field"><label>Название</label><input type="text" name="name" value="Йога" required ></div><div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="75" required min="10"></div><div class="field"><label>Цена, ₽</label><input type="number" name="price" value="800" required min="0"></div><div class="field"><label>Короткое описание (для карточки на главной)</label><input type="text" name="short" value="Мягкая практика для гибкости, дыхания и спокойствия." required ></div><div class="field"><label>Подробное описание</label><textarea name="desc" required>Асаны, работа с дыханием и расслабление. Подходит новичкам и тем, кто давно занимается.</textarea></div><div class="field"><label>Преимущества (каждое с новой строки)</label><textarea name="benefits" required>Гибкость и осанка
+Снижение стресса
+Занятия для любого уровня</textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-hiit">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить услугу</h3>
+   <div class="field"><label>Название</label><input type="text" name="name" value="Кардио и HIIT" required ></div><div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="45" required min="10"></div><div class="field"><label>Цена, ₽</label><input type="number" name="price" value="700" required min="0"></div><div class="field"><label>Короткое описание (для карточки на главной)</label><input type="text" name="short" value="Интенсивные интервалы для энергии и сжигания калорий." required ></div><div class="field"><label>Подробное описание</label><textarea name="desc" required>Короткие интервалы с высокой нагрузкой и отдыхом. Хорошо подходит для снижения веса.</textarea></div><div class="field"><label>Преимущества (каждое с новой строки)</label><textarea name="benefits" required>Выносливость сердца
+Расход калорий
+Быстрый результат</textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-pilates">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить услугу</h3>
+   <div class="field"><label>Название</label><input type="text" name="name" value="Пилатес" required ></div><div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="60" required min="10"></div><div class="field"><label>Цена, ₽</label><input type="number" name="price" value="850" required min="0"></div><div class="field"><label>Короткое описание (для карточки на главной)</label><input type="text" name="short" value="Укрепление мышц кора и контроль над движением." required ></div><div class="field"><label>Подробное описание</label><textarea name="desc" required>Плавные упражнения для глубоких мышц, спины и пресса на матах и с малым инвентарём.</textarea></div><div class="field"><label>Преимущества (каждое с новой строки)</label><textarea name="benefits" required>Здоровая спина
+Сильный кор
+Мягкая нагрузка на суставы</textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-stretch">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить услугу</h3>
+   <div class="field"><label>Название</label><input type="text" name="name" value="Стретчинг" required ></div><div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="45" required min="10"></div><div class="field"><label>Цена, ₽</label><input type="number" name="price" value="600" required min="0"></div><div class="field"><label>Короткое описание (для карточки на главной)</label><input type="text" name="short" value="Растяжка и восстановление после нагрузок." required ></div><div class="field"><label>Подробное описание</label><textarea name="desc" required>Работа с мышцами и фасциями, чтобы тело двигалось свободнее, а усталость уходила быстрее.</textarea></div><div class="field"><label>Преимущества (каждое с новой строки)</label><textarea name="benefits" required>Восстановление мышц
+Подвижность суставов
+Хорошо после силовых</textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-personal">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить услугу</h3>
+   <div class="field"><label>Название</label><input type="text" name="name" value="Персональная тренировка" required ></div><div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="60" required min="10"></div><div class="field"><label>Цена, ₽</label><input type="number" name="price" value="2500" required min="0"></div><div class="field"><label>Короткое описание (для карточки на главной)</label><input type="text" name="short" value="Индивидуальное занятие с тренером один на один." required ></div><div class="field"><label>Подробное описание</label><textarea name="desc" required>План строится под вашу цель: форма, сила, реабилитация после перерыва или подготовка к соревнованиям.</textarea></div><div class="field"><label>Преимущества (каждое с новой строки)</label><textarea name="benefits" required>Индивидуальный план
+Всё внимание тренера
+Гибкий график</textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-newsvc">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Новая услуга</h3>
+   <div class="field"><label>Название</label>
+      <input type="text" name="name" value="" required ></div>
+      <div class="field"><label>Длительность, мин</label>
+         <input type="number" name="duration" value="" required min="10"></div>
+         <div class="field"><label>Цена, ₽</label>
+            <input type="number" name="price" value="" required min="0"></div>
+            <div class="field"><label>Короткое описание (для карточки на главной)</label>
+               <input type="text" name="short" value="" required ></div>
+               <div class="field"><label>Подробное описание</label>
+                  <textarea name="desc" required></textarea></div>
+
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-anna">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить тренера</h3>
+   <div class="field"><label>Имя и фамилия</label><input type="text" name="name" value="Анна Волкова" required ></div>
+   <div class="field"><label>Специализация</label><input type="text" name="spec" value="Йога и пилатес" required ></div>
+   <div class="field"><label>Опыт (например, 5 лет)</label><input type="text" name="exp" value="8 лет" required ></div>
+   <div class="field"><label>Краткая биография</label>
+   <textarea name="bio" required>Ведёт группы по йоге и пилатесу, помогает вернуть гибкость и избавиться от зажимов в спине.</textarea></div>
+   <div class="field"><label>Достижения</label>
+   <textarea name="awards" required>Сертификат инструктора йоги (RYT-500)
+Автор программы «Спина без боли»</textarea></div><div class="field"><label>Фото (необязательно, до 600 КБ)</label>
+      <input type="file" name="photo" accept="image/*"></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-maxim">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить тренера</h3>
+   <div class="field"><label>Имя и фамилия</label><input type="text" name="name" value="Максим Орлов" required ></div><div class="field"><label>Специализация</label><input type="text" name="spec" value="Силовые тренировки" required ></div><div class="field"><label>Опыт (например, 5 лет)</label><input type="text" name="exp" value="10 лет" required ></div><div class="field"><label>Краткая биография</label><textarea name="bio" required>Мастер спорта по пауэрлифтингу. Учит технике базовых упражнений и строит программы с нуля.</textarea></div><div class="field"><label>Достижения (каждое с новой строки)</label><textarea name="awards" required>Мастер спорта по пауэрлифтингу
+Подготовил более 200 клиентов</textarea></div><div class="field"><label>Направления</label><div class="checks"><label class="check"><input type="checkbox" name="services" value="strength" checked> Силовые тренировки</label><label class="check"><input type="checkbox" name="services" value="yoga"> Йога</label><label class="check"><input type="checkbox" name="services" value="hiit" checked> Кардио и HIIT</label><label class="check"><input type="checkbox" name="services" value="pilates"> Пилатес</label><label class="check"><input type="checkbox" name="services" value="stretch"> Стретчинг</label><label class="check"><input type="checkbox" name="services" value="personal" checked> Персональная тренировка</label></div></div><div class="field"><label>Фото (необязательно, до 600 КБ)</label><input type="file" name="photo" accept="image/*"></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-elena">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить тренера</h3>
+   <div class="field"><label>Имя и фамилия</label><input type="text" name="name" value="Елена Северина" required ></div><div class="field"><label>Специализация</label><input type="text" name="spec" value="Кардио и HIIT" required ></div><div class="field"><label>Опыт (например, 5 лет)</label><input type="text" name="exp" value="6 лет" required ></div><div class="field"><label>Краткая биография</label><textarea name="bio" required>Энергичные интервальные тренировки, после которых хочется ещё. Работает с теми, кто хочет снизить вес.</textarea></div><div class="field"><label>Достижения (каждое с новой строки)</label><textarea name="awards" required>Инструктор групповых программ
+Финалистка городских соревнований по функциональному фитнесу</textarea></div><div class="field"><label>Направления</label><div class="checks"><label class="check"><input type="checkbox" name="services" value="strength" checked> Силовые тренировки</label><label class="check"><input type="checkbox" name="services" value="yoga"> Йога</label><label class="check"><input type="checkbox" name="services" value="hiit" checked> Кардио и HIIT</label><label class="check"><input type="checkbox" name="services" value="pilates" checked> Пилатес</label><label class="check"><input type="checkbox" name="services" value="stretch"> Стретчинг</label><label class="check"><input type="checkbox" name="services" value="personal"> Персональная тренировка</label></div></div><div class="field"><label>Фото (необязательно, до 600 КБ)</label><input type="file" name="photo" accept="image/*"></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-igor">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Изменить тренера</h3>
+   <div class="field"><label>Имя и фамилия</label><input type="text" name="name" value="Игорь Мирный" required ></div><div class="field"><label>Специализация</label><input type="text" name="spec" value="Стретчинг и восстановление" required ></div><div class="field"><label>Опыт (например, 5 лет)</label><input type="text" name="exp" value="12 лет" required ></div><div class="field"><label>Краткая биография</label><textarea name="bio" required>Спортивный реабилитолог. Помогает вернуться к тренировкам после перерыва и травм.</textarea></div><div class="field"><label>Достижения (каждое с новой строки)</label><textarea name="awards" required>Диплом спортивного реабилитолога
+Курсы по кинезиотейпированию</textarea></div><div class="field"><label>Направления</label><div class="checks"><label class="check"><input type="checkbox" name="services" value="strength"> Силовые тренировки</label><label class="check"><input type="checkbox" name="services" value="yoga" checked> Йога</label><label class="check"><input type="checkbox" name="services" value="hiit"> Кардио и HIIT</label><label class="check"><input type="checkbox" name="services" value="pilates"> Пилатес</label><label class="check"><input type="checkbox" name="services" value="stretch" checked> Стретчинг</label><label class="check"><input type="checkbox" name="services" value="personal" checked> Персональная тренировка</label></div></div><div class="field"><label>Фото (необязательно, до 600 КБ)</label><input type="file" name="photo" accept="image/*"></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+<div class="modal" id="edit-newtr">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+   <!-- форма добавления тренера -->
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" method="post" enctype="multipart/form-data"><h3>Новый тренер</h3>
+   <div class="field"><label>Имя и фамилия</label>
+      <input type="text" name="name" value="" required ></div>
+      <div class="field"><label>Специализация</label>
+         <input type="text" name="spec" value="" required ></div>
+         <div class="field"><label>Опыт (например, 5 лет)</label>
+            <input type="text" name="exp" value="" required ></div>
+            <div class="field"><label>Краткая биография</label>
+               <textarea name="bio" required></textarea></div>
+               <div class="field"><label>Достижения</label>
+                  <textarea name="awards" required></textarea></div>
+               <div class="field"><label>Фото (необязательно, до 600 КБ)</label>
+                        <input type="file" name="photo" accept="image/*"></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>

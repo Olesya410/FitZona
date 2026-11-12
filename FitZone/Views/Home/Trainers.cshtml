@@ -1,0 +1,51 @@
+﻿@model List<Trainer>
+@{
+    ViewData["Title"] = "Тренеры";
+}
+
+<section class="page-hero"><div class="container"><div><h1>Наша команда</h1><p>Тренеры FITZONE — это люди, которые любят своё дело и умеют объяснять.</p></div><img src="~/img/cat-thumb.png" alt=""></div></section>
+<section class="section"><div class="container"><div class="grid grid--4" id="trFull">
+  @foreach (var t in Model)
+  {
+   var photo = Url.Content("~/" + (t.ImagePath ?? "img/logo.png"));
+   var modalId = "trainer-" + t.Id;
+   <article class="card trainer">
+    <div class="trainer__photo"><img src="@photo" alt="@t.FullName" loading="lazy"></div>
+    <div class="trainer__body">
+     <h3>@t.FullName</h3>
+     <p><span class="tag">@t.Specialization</span></p>
+     <p class="muted">Опыт: @t.ExperienceYears лет</p>
+     <a class="btn btn--dark btn--sm" href="#@modalId">Подробнее</a>
+    </div>
+   </article>
+  }
+  </div>
+  @foreach (var t in Model)
+  {
+   var photo = Url.Content("~/" + (t.ImagePath ?? "img/logo.png"));
+   var modalId = "trainer-" + t.Id;
+   var achievements = (t.Achievements ?? "").Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+   <div class="modal" id="@modalId">
+    <a class="modal__bg" href="#trFull" aria-label="Закрыть"></a>
+    <div class="modal__box">
+     <a class="close" href="#trFull" aria-label="Закрыть">×</a>
+     <div class="dlg-photo"><img src="@photo" alt="@t.FullName"></div>
+     <h3 style="text-align:center">@t.FullName</h3>
+     <p style="text-align:center"><span class="tag">@t.Specialization</span> <span class="tag tag--pink">опыт @t.ExperienceYears лет</span></p>
+     <p>@t.Biography</p>
+     @if (achievements.Length > 0)
+     {
+      <h4>Достижения</h4>
+      <ul>
+       @foreach (var a in achievements)
+       {
+        <li>@a</li>
+       }
+      </ul>
+     }
+     <a class="btn btn--pink" asp-controller="Home" asp-action="Booking" asp-route-trainer="@t.Id">Записаться к тренеру</a>
+    </div>
+   </div>
+  }
+
+<p style="text-align:center;margin-top:50px"><a class="btn btn--pink" asp-controller="Home" asp-action="Booking">Записаться к тренеру</a></p></div></section>

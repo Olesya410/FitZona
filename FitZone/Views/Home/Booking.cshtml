@@ -1,0 +1,37 @@
+@model BookingViewModel
+@{
+    ViewData["Title"] = "Запись на тренировку";
+    var bookState = ViewData["BookState"] as string ?? "";
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var closedText = string.Join(", ", Model.ClosedDays.Select(d => d.ToString("dd.MM.yyyy")));
+}
+
+<section class="page-hero"><div class="container"><div><h1>Запишись на тренировку</h1><p>Четыре шага — и место в зале ваше. Подтверждение придёт после проверки заявки.</p></div><img src="~/img/cat-thumb.png" alt=""></div></section>
+<section class="section"><div class="container booking-layout">
+ <form class="panel steps" id="bookingForm" method="post">
+  <div class="step"><h3>Направление и тренер</h3>
+   <div class="form form--2">
+    <div class="field"><label for="bkService">Направление</label><select id="bkService" name="service" required><option value="">Выберите направление</option>@foreach (var s in Model.Services){<option value="@s.Id" selected="@(s.Id == Model.SelectedServiceId)">@s.Name</option>}</select><p class="error"></p></div>
+    <div class="field"><label for="bkTrainer">Тренер</label><select id="bkTrainer" name="trainer" required><option value="">Выберите тренера</option>@foreach (var tr in Model.Trainers){<option value="@tr.Id" selected="@(tr.Id == Model.SelectedTrainerId)">@tr.FullName</option>}</select><p class="error"></p></div>
+   </div></div>
+  <div class="step"><h3>Дата</h3>
+   <div class="field" style="max-width:280px"><label for="bkDate">Выберите день</label><input type="date" id="bkDate" name="date" value="@Model.SelectedDate" min="@today" required></div>
+   <p class="muted"><small>По воскресеньям записи нет.@if (closedText.Length > 0){<text> Закрыты для записи: @closedText.</text>}</small></p></div>
+  <div class="step"><h3>Время</h3><div class="slots" id="slots">@for (int i = 0; i < Model.Slots.Count; i++){var slotId = "time" + i;var slot = Model.Slots[i];<input class="slot-radio" type="radio" name="time" id="@slotId" value="@slot" checked="@(slot == Model.SelectedTime)" required><label class="slot" for="@slotId">@slot</label>}</div></div>
+  <div class="step"><h3>Отправка</h3>
+   <div class="form">
+    <div class="field"><label class="check"><input type="checkbox" id="bkAgree" name="agree" required> Согласен на обработку персональных данных</label><p class="error"></p></div>
+    <button class="btn btn--pink" type="submit">Отправить заявку</button>
+   </div>
+   <div class="notice notice--warn @(bookState == "login" ? "" : "hidden")" id="bookLogin" role="alert">Чтобы отправить заявку, войдите в аккаунт: так мы знаем, кому подтверждать запись. <a asp-controller="Home" asp-action="Login"><u>Войти</u></a> или <a asp-controller="Home" asp-action="Register"><u>зарегистрироваться</u></a></div>
+   <div class="notice notice--warn @(bookState == "staff" ? "" : "hidden")" id="bookStaff" role="alert">Записываются на тренировки только клиенты. Войдите под аккаунтом пользователя.</div>
+   <div class="notice notice--warn @(bookState == "error" ? "" : "hidden")" id="bookError" role="alert">@(ViewData["BookError"] as string)</div>
+   <div class="notice notice--ok @(bookState == "ok" ? "" : "hidden")" id="bookingSuccess" role="alert"><b>Заявка отправлена!</b> Мы подтвердим запись в течение дня. Статус можно смотреть в <a asp-controller="Home" asp-action="Account"><u>личном кабинете</u></a>.</div>
+  </div>
+ </form>
+ <aside class="panel summary">
+  <h3>Стоимость занятий</h3>
+  <dl>@foreach (var s in Model.Services){<dt>@s.Name</dt><dd>@s.PricePerSession.ToString("0") ₽</dd>}</dl>
+  <div class="tip"><img src="~/img/cat-drink.png" alt=""><p>Возьмите воду и сменную обувь. Приходите за 10 минут до начала.</p></div>
+ </aside>
+</div></section>

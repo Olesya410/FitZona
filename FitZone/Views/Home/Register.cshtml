@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<section class="page-hero"><div class="container"><div><h1>Регистрация</h1><p>Создайте аккаунт за минуту: он нужен для записи на тренировки и отзывов.</p></div><img src="~/img/cat-bottle.png" alt=""></div></section>
+<section class="section"><div class="container"><div class="auth-box panel">
+ <img src="~/img/logo.png" alt="FITZONE" style="height:48px;margin:0 auto 20px">
+ <h2 style="text-align:center;font-size:2rem">Регистрация</h2>
+ <form class="form" id="registerForm" method="post">
+  @if (ViewData["Error"] is string registerError){<div class="notice notice--warn" role="alert">@registerError</div>}
+  <div class="field"><label for="rName">Имя</label><input id="rName" name="name" type="text" autocomplete="name" required minlength="2"><p class="error"></p></div><div class="field"><label for="rEmail">E-mail</label><input id="rEmail" name="email" type="email" autocomplete="email" required><p class="error"></p></div><div class="field"><label for="rPass">Пароль</label><input id="rPass" name="password" type="password" autocomplete="new-password" required minlength="8" pattern=".*\d.*" title="Минимум 8 символов и одна цифра"><p class="error"></p></div><div class="field"><label for="rPass2">Повторите пароль</label><input id="rPass2" name="password2" type="password" autocomplete="new-password" required minlength="8"><p class="error"></p></div>
+  <button class="btn btn--pink" type="submit">Зарегистрироваться</button>
+  <p>Уже есть аккаунт? <a asp-controller="Home" asp-action="Login"><u>Войти</u></a></p>
+ </form>
+</div></div></section>

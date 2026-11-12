@@ -1,0 +1,118 @@
+﻿@model IndexViewModel
+@{
+    ViewData["Title"] = "Главная";
+    var phone = Model.Contact.Phone ?? "";
+    var phoneLink = "tel:" + new string(phone.Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
+    var email = Model.Contact.Email ?? "";
+    var emailLink = "mailto:" + email;
+}
+
+<section class="hero">
+ <div class="container hero__inner">
+  <div class="hero__text">
+   <p class="hero__slogan">Двигайся. Расти. Живи.</p>
+   <h1>Движение <em>вдохновляет</em></h1>
+   <p>Тренировки, после которых хочется улыбаться: сильные тренеры, уютные залы и программа под вашу цель.</p>
+   <a class="btn btn--pink" asp-controller="Home" asp-action="Booking">Начать тренировку</a>
+  </div>
+  <div class="hero__art"><span class="star" aria-hidden="true"></span><img src="~/img/cat-main.png" alt="Маскот FITZONE — кот в спортивной одежде и розовых наушниках"></div>
+ </div>
+</section>
+
+<section class="section" id="about">
+ <div class="container about-grid">
+  <div>
+   <h2>О нас</h2>
+   <p class="lead">FITZONE — фитнес-центр, где тренировка — это забота о себе, а не наказание. Мы собрали команду сертифицированных тренеров и обустроили залы, в которых приятно находиться.</p>
+   <p>Наша миссия — сделать движение привычкой, которая даёт энергию и гармонию. У нас два зала, студия йоги, зона кардио и просторные раздевалки.</p>
+   <div class="stats"><div class="stat"><b>@Model.Services.Count</b>направлений</div><div class="stat"><b>@Model.Trainers.Count</b>тренера</div><div class="stat"><b>2</b>зала и студия</div></div>
+   <p style="margin-top:26px"><a class="btn btn--dark" asp-controller="Home" asp-action="About">Узнать больше</a></p>
+  </div>
+  <img class="art-panel" src="~/img/center.jpg" alt="Фитнес-центр FITZONE">
+ </div>
+</section>
+
+<section class="section section--white" id="services">
+ <div class="container">
+  <div class="section-head"><h2>Наши услуги</h2><a class="btn btn--outline" asp-controller="Home" asp-action="Services">Все услуги</a></div>
+  <div class="bento" id="svcShort">
+   @for (int i = 0; i < Model.Services.Count; i++)
+   {
+    var s = Model.Services[i];
+    var tileClass = $"tile tile--{ServiceStyle.Color(i)} span-{ServiceStyle.SpanShort(i)}";
+    var tileAnchor = "service-" + s.Id;
+    <a class="@tileClass" asp-controller="Home" asp-action="Services" asp-fragment="@tileAnchor">@Html.Raw(ServiceStyle.Icon(i))
+     <div class="tile__body"><h3>@s.Name</h3><p>@s.Description</p></div>
+     <div class="tile__foot"><span class="chip">@s.DurationMinutes мин</span><span class="tile__go" aria-hidden="true">↗</span></div>
+    </a>
+   }
+ </div>
+ </div>
+</section>
+
+<section class="section" id="trainers">
+ <div class="container">
+  <div class="section-head"><h2>Наши тренеры</h2><a class="btn btn--outline" asp-controller="Home" asp-action="Trainers">Вся команда</a></div>
+  <div class="grid grid--4" id="trShort">
+  @foreach (var tr in Model.Trainers)
+  {
+   var photo = Url.Content("~/" + (tr.ImagePath ?? "img/logo.png"));
+   <article class="card trainer">
+    <div class="trainer__photo"><img src="@photo" alt="@tr.FullName" loading="lazy"></div>
+    <div class="trainer__body">
+     <h3>@tr.FullName</h3>
+     <p><span class="tag">@tr.Specialization</span></p>
+     <p class="muted">Опыт: @tr.ExperienceYears лет</p>
+    </div>
+   </article>
+  }
+  </div>
+ </div>
+</section>
+
+<section class="section section--dark" id="reviews">
+ <div class="container">
+  <div class="section-head"><h2>Отзывы клиентов</h2><a class="btn btn--pink" asp-controller="Home" asp-action="Reviews">Все отзывы</a></div>
+  <div class="grid grid--3" id="homeReviews">
+  @foreach (var r in Model.Reviews)
+  {
+   <article class="card review">
+    <div class="review__top"><h3>@r.AuthorName</h3><span class="stars" aria-label="Оценка @r.Rating из 5">@(new string('★', r.Rating))<span class="off">@(new string('★', 5 - r.Rating))</span></span></div>
+    <small class="muted">@r.ReviewDate.ToString("dd.MM.yyyy")</small>
+    <p>@r.Comment</p>
+   </article>
+  }
+  </div>
+ </div>
+</section>
+
+<section class="section" id="booking">
+ <div class="container">
+  <div class="panel">
+   <h2>Запишись на тренировку</h2>
+   <p>Выберите направление, тренера, день и время — остальное закончим на странице записи.</p>
+   <form class="home-booking" id="homeBooking" asp-controller="Home" asp-action="Booking" method="get">
+    <div class="field"><label for="hService">Направление</label><select id="hService" name="service">@foreach (var s in Model.Services){<option value="@s.Id">@s.Name</option>}</select></div>
+    <div class="field"><label for="hTrainer">Тренер</label><select id="hTrainer" name="trainer">@foreach (var tr in Model.Trainers){<option value="@tr.Id">@tr.FullName</option>}</select></div>
+    <div class="field"><label for="hDate">День</label><input id="hDate" type="date" name="date" required></div>
+    <div class="field"><label for="hTime">Время</label><select id="hTime" name="time"><option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option><option value="14:00">14:00</option><option value="16:00">16:00</option><option value="18:00">18:00</option><option value="19:30">19:30</option></select></div>
+    <button class="btn btn--pink" type="submit">Далее</button>
+   </form>
+  </div>
+ </div>
+</section>
+
+<section class="section section--white" id="contacts">
+ <div class="container">
+  <div class="section-head"><h2>Контакты</h2></div>
+  <div class="grid grid--2">
+   <ul class="contact-list">
+    <li><b>Адрес</b><span>@Model.Contact.Address</span></li>
+    <li><b>Телефон</b><a href="@phoneLink">@phone</a></li>
+    <li><b>Электронная почта</b><a href="@emailLink">@email</a></li>
+    <li><a class="btn btn--dark btn--sm" asp-controller="Home" asp-action="Contacts">Все контакты</a></li>
+   </ul>
+   <iframe class="map" title="Карта проезда" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=37.55%2C55.73%2C37.68%2C55.78&amp;layer=mapnik"></iframe>
+  </div>
+ </div>
+</section>

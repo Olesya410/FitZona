@@ -1,0 +1,246 @@
+@model AdminViewModel
+@{
+    ViewData["Title"] = "Админ-панель";
+    ViewData["CabinetText"] = "Админ-панель";
+    ViewData["CabinetAction"] = "Admin";
+
+    var tf = "hh\\:mm";
+    var tReq = Model.Tab == "req";
+    var tMod = Model.Tab == "mod";
+    var tSvc = Model.Tab == "svc";
+    var tTr = Model.Tab == "tr";
+    var tSch = Model.Tab == "sch";
+    var tUsr = Model.Tab == "usr";
+    var tSet = Model.Tab == "set";
+}
+
+<section class="page-hero"><div class="container"><div><h1>Админ-панель</h1><p>Полный доступ: заявки, отзывы, услуги, тренеры, расписание, пользователи и контакты сайта.</p></div><img src="~/img/cat-stretch.png" alt=""></div></section>
+<section class="section"><div class="container">
+ <div id="panel">
+  <div style="margin-bottom:18px">Вы вошли как <b>@Model.CurrentUserName</b> · роль: <b>Администратор</b>
+   <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;margin-left:10px"><button class="btn btn--outline btn--sm" type="submit">Выйти</button></form></div>
+
+  @if (TempData["Ok"] is string okText)
+  {
+   <div class="notice notice--ok" role="status">@okText</div>
+  }
+  @if (TempData["Err"] is string errText)
+  {
+   <div class="notice notice--warn" role="alert">@errText</div>
+  }
+
+  <div class="panel tabgroup">
+   <input class="tab-radio" type="radio" name="tab" id="tab-req" checked="@tReq"><input class="tab-radio" type="radio" name="tab" id="tab-mod" checked="@tMod"><input class="tab-radio" type="radio" name="tab" id="tab-svc" checked="@tSvc"><input class="tab-radio" type="radio" name="tab" id="tab-tr" checked="@tTr"><input class="tab-radio" type="radio" name="tab" id="tab-sch" checked="@tSch"><input class="tab-radio" type="radio" name="tab" id="tab-usr" checked="@tUsr"><input class="tab-radio" type="radio" name="tab" id="tab-set" checked="@tSet">
+   <div class="tabs"><label class="tab" for="tab-req">Заявки</label><label class="tab" for="tab-mod">Отзывы</label><label class="tab" for="tab-svc">Услуги</label><label class="tab" for="tab-tr">Тренеры</label><label class="tab" for="tab-sch">Расписание</label><label class="tab" for="tab-usr">Пользователи и роли</label><label class="tab" for="tab-set">Контакты и настройки</label></div>
+
+   @* ===== Заявки ===== *@
+   <div data-pane="req">
+    @if (Model.Bookings.Count == 0)
+    {
+     <p class="muted">Заявок пока нет. Они появятся, когда клиенты начнут записываться на странице «Запись на тренировку».</p>
+    }
+    else
+    {
+     <form asp-action="SaveBookings" method="post"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Контакт</th><th>Услуга</th><th>Тренер</th><th>Дата и время</th><th>Статус</th><th></th></tr></thead><tbody>
+      @foreach (var b in Model.Bookings)
+      {
+       var statusName = "status_" + b.Id;
+       var delBooking = Url.Action("DeleteBooking", "Admin", new { id = b.Id });
+       <tr><td>@b.ClientName</td>
+        <td>@b.ClientEmail@if (!string.IsNullOrEmpty(b.ClientPhone)){<br><small>@b.ClientPhone</small>}</td>
+        <td>@b.ServiceName</td><td>@b.TrainerName</td><td>@b.Date.ToString("dd.MM.yyyy") @b.Time.ToString(tf)</td>
+        <td><select name="@statusName">@foreach (var st in BookingStatuses.All){<option value="@st" selected="@(b.Status == st)">@st</option>}</select></td>
+        <td><button class="btn btn--outline btn--sm" type="submit" formaction="@delBooking" formnovalidate onclick="return confirm('Удалить заявку?')">Удалить</button></td></tr>
+      }
+     </tbody></table></div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить статусы</button></p></form>
+    }
+   </div>
+
+   @* ===== Отзывы ===== *@
+   <div data-pane="mod">
+    <h4>На модерации</h4>
+    <ul class="list">
+     @if (Model.PendingReviews.Count == 0)
+     {
+      <li>Новых отзывов на модерации нет</li>
+     }
+     @foreach (var r in Model.PendingReviews)
+     {
+      <li><span><b>@r.AuthorName</b> <span class="stars" aria-label="Оценка @r.Rating из 5">@(new string('★', r.Rating))<span class="off">@(new string('★', 5 - r.Rating))</span></span> <small>@r.ReviewDate.ToString("dd.MM.yyyy")</small><br><small>@r.Comment</small></span>
+       <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <form asp-action="ApproveReview" asp-route-id="@r.Id" method="post"><button class="btn btn--dark btn--sm" type="submit">Опубликовать</button></form>
+        <form asp-action="DeleteReview" asp-route-id="@r.Id" method="post"><button class="btn btn--outline btn--sm" type="submit" onclick="return confirm('Отклонить и удалить отзыв?')">Отклонить</button></form>
+       </div></li>
+     }
+    </ul>
+    <h4 style="margin-top:30px">Опубликованные отзывы</h4>
+    <ul class="list">
+     @if (Model.PublishedReviews.Count == 0)
+     {
+      <li>Опубликованных отзывов нет</li>
+     }
+     @foreach (var r in Model.PublishedReviews)
+     {
+      <li><span><b>@r.AuthorName</b> <span class="stars" aria-label="Оценка @r.Rating из 5">@(new string('★', r.Rating))<span class="off">@(new string('★', 5 - r.Rating))</span></span> <small>@r.ReviewDate.ToString("dd.MM.yyyy")</small><br><small>@r.Comment</small></span>
+       <form asp-action="DeleteReview" asp-route-id="@r.Id" method="post"><button class="btn btn--outline btn--sm" type="submit" onclick="return confirm('Удалить отзыв?')">Удалить</button></form></li>
+     }
+    </ul>
+   </div>
+
+   @* ===== Услуги ===== *@
+   <div data-pane="svc">
+    <p><a class="btn btn--pink btn--sm" href="#edit-newsvc">+ Добавить услугу</a></p>
+    <div class="table-wrap"><table><thead><tr><th>Услуга</th><th>Длительность</th><th>Группа</th><th>Цена</th><th></th></tr></thead><tbody>
+     @foreach (var s in Model.Services)
+     {
+      var editSvc = "#edit-svc-" + s.Id;
+      <tr><td>@s.Name</td><td>@s.DurationMinutes мин</td><td>@(s.MaxGroupSize.HasValue ? "до " + s.MaxGroupSize + " чел." : "—")</td><td>@s.PricePerSession.ToString("0") ₽</td>
+       <td style="white-space:nowrap"><a class="btn btn--dark btn--sm" href="@editSvc">Изменить</a>
+        <form asp-action="DeleteService" asp-route-id="@s.Id" method="post" style="display:inline"><button class="btn btn--outline btn--sm" type="submit" onclick="return confirm('Удалить услугу?')">Удалить</button></form></td></tr>
+     }
+    </tbody></table></div>
+   </div>
+
+   @* ===== Тренеры ===== *@
+   <div data-pane="tr">
+    <p><a class="btn btn--pink btn--sm" href="#edit-newtr">+ Добавить тренера</a></p>
+    <div class="table-wrap"><table><thead><tr><th>Тренер</th><th>Специализация</th><th>Опыт</th><th></th></tr></thead><tbody>
+     @foreach (var t in Model.Trainers)
+     {
+      var editTr = "#edit-tr-" + t.Id;
+      var photo = Url.Content("~/" + (t.ImagePath ?? "img/logo.png"));
+      <tr><td><img class="mini-photo" src="@photo" alt=""> @t.FullName</td><td>@t.Specialization</td><td>@t.ExperienceYears лет</td>
+       <td style="white-space:nowrap"><a class="btn btn--dark btn--sm" href="@editTr">Изменить</a>
+        <form asp-action="DeleteTrainer" asp-route-id="@t.Id" method="post" style="display:inline"><button class="btn btn--outline btn--sm" type="submit" onclick="return confirm('Удалить тренера?')">Удалить</button></form></td></tr>
+     }
+    </tbody></table></div>
+   </div>
+
+   @* ===== Расписание ===== *@
+   <div data-pane="sch">
+    <h4>Время занятий</h4>
+    <div class="slots">
+     @foreach (var sl in Model.Slots)
+     {
+      <form asp-action="DeleteTime" asp-route-id="@sl.Id" method="post" style="display:inline"><span class="slot selected">@sl.SlotTime.ToString(tf) <button class="chip-x" type="submit" aria-label="Убрать @sl.SlotTime.ToString(tf)">×</button></span></form>
+     }
+    </div>
+    <form class="inline-form" asp-action="AddTime" method="post"><input type="time" name="newTime" required><button class="btn btn--dark btn--sm" type="submit">Добавить время</button></form>
+
+    <h4 style="margin-top:30px">Закрытые дни</h4>
+    <p class="muted"><small>Воскресенье — выходной всегда. Здесь можно закрыть запись на другие даты, например на праздники.</small></p>
+    <ul class="list">
+     @if (Model.ClosedDays.Count == 0)
+     {
+      <li class="muted">Закрытых дней нет</li>
+     }
+     @foreach (var cd in Model.ClosedDays)
+     {
+      <li><span>@cd.ClosedDate.ToString("dd.MM.yyyy")</span>
+       <form asp-action="DeleteClosedDay" asp-route-id="@cd.Id" method="post"><button class="btn btn--outline btn--sm" type="submit">Открыть день</button></form></li>
+     }
+    </ul>
+    <form class="inline-form" asp-action="AddClosedDay" method="post"><input type="date" name="newClosed" required><button class="btn btn--dark btn--sm" type="submit">Закрыть день</button></form>
+   </div>
+
+   @* ===== Пользователи и роли ===== *@
+   <div data-pane="usr">
+    <form asp-action="SaveRoles" method="post"><div class="table-wrap"><table><thead><tr><th>Имя</th><th>E-mail</th><th>Роль</th><th></th></tr></thead><tbody>
+     @foreach (var u in Model.Users)
+     {
+      var roleName = "role_" + u.Id;
+      var isMe = u.Id == Model.CurrentUserId;
+      var delUser = Url.Action("DeleteUser", "Admin", new { id = u.Id });
+      <tr><td>@u.FullName</td><td>@u.Email</td>
+       <td><select name="@roleName" disabled="@isMe" title="@(isMe ? "Свою роль менять нельзя" : "")">@foreach (var role in Roles.All){<option value="@role" selected="@(u.Role == role)">@role</option>}</select></td>
+       <td>@if (!isMe){<button class="btn btn--outline btn--sm" type="submit" formaction="@delUser" formnovalidate onclick="return confirm('Удалить пользователя вместе с его записями?')">Удалить</button>}</td></tr>
+     }
+    </tbody></table></div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить роли</button></p></form>
+   </div>
+
+   @* ===== Контакты и настройки ===== *@
+   <div data-pane="set">
+    <form class="form form--2" asp-action="SaveSettings" method="post">
+     <div class="field"><label for="st_address">Адрес</label><input id="st_address" name="address" value="@Model.Contact.Address" maxlength="200" required></div>
+     <div class="field"><label for="st_phone">Телефон</label><input id="st_phone" name="phone" value="@Model.Contact.Phone" maxlength="50" required></div>
+     <div class="field"><label for="st_email">Электронная почта</label><input id="st_email" name="email" type="email" value="@Model.Contact.Email" maxlength="100" required></div>
+     <div class="field"><label for="st_hours">Время работы</label><input id="st_hours" name="hours" value="@Model.Contact.WorkingHours" maxlength="200" required></div>
+     <div class="field field--full"><button class="btn btn--pink" type="submit">Сохранить настройки</button></div>
+    </form>
+   </div>
+  </div>
+ </div>
+</div></section>
+
+@* ===== Окна «Изменить» (открываются по якорю, без JavaScript) ===== *@
+@foreach (var s in Model.Services)
+{
+ var modalId = "edit-svc-" + s.Id;
+ <div class="modal" id="@modalId">
+  <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+  <div class="modal__box">
+   <a class="close" href="#panel" aria-label="Закрыть">×</a>
+   <form class="form" asp-action="SaveService" method="post"><h3>Изменить услугу</h3>
+    <input type="hidden" name="id" value="@s.Id">
+    <div class="field"><label>Название</label><input type="text" name="name" value="@s.Name" maxlength="100" required></div>
+    <div class="field"><label>Длительность, мин</label><input type="number" name="duration" value="@s.DurationMinutes" required min="10"></div>
+    <div class="field"><label>Размер группы, чел. (необязательно)</label><input type="number" name="maxGroup" value="@s.MaxGroupSize" min="1"></div>
+    <div class="field"><label>Цена, ₽</label><input type="number" name="price" value="@s.PricePerSession.ToString("0")" required min="0"></div>
+    <div class="field"><label>Описание</label><textarea name="desc" maxlength="500">@s.Description</textarea></div>
+    <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+   </form>
+  </div>
+ </div>
+}
+<div class="modal" id="edit-newsvc">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" asp-action="SaveService" method="post"><h3>Новая услуга</h3>
+   <input type="hidden" name="id" value="0">
+   <div class="field"><label>Название</label><input type="text" name="name" maxlength="100" required></div>
+   <div class="field"><label>Длительность, мин</label><input type="number" name="duration" required min="10"></div>
+   <div class="field"><label>Размер группы, чел. (необязательно)</label><input type="number" name="maxGroup" min="1"></div>
+   <div class="field"><label>Цена, ₽</label><input type="number" name="price" required min="0"></div>
+   <div class="field"><label>Описание</label><textarea name="desc" maxlength="500"></textarea></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>
+
+@foreach (var t in Model.Trainers)
+{
+ var modalId = "edit-tr-" + t.Id;
+ <div class="modal" id="@modalId">
+  <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+  <div class="modal__box">
+   <a class="close" href="#panel" aria-label="Закрыть">×</a>
+   <form class="form" asp-action="SaveTrainer" method="post" enctype="multipart/form-data"><h3>Изменить тренера</h3>
+    <input type="hidden" name="id" value="@t.Id">
+    <div class="field"><label>Имя и фамилия</label><input type="text" name="name" value="@t.FullName" maxlength="150" required></div>
+    <div class="field"><label>Специализация</label><input type="text" name="spec" value="@t.Specialization" maxlength="200" required></div>
+    <div class="field"><label>Опыт, лет</label><input type="number" name="experience" value="@t.ExperienceYears" required min="0" max="70"></div>
+    <div class="field"><label>Краткая биография</label><textarea name="bio" maxlength="1000">@t.Biography</textarea></div>
+    <div class="field"><label>Достижения (каждое с новой строки)</label><textarea name="awards" maxlength="1000">@t.Achievements</textarea></div>
+    <div class="field"><label>Новое фото (необязательно, до 600 КБ)</label><input type="file" name="photo" accept="image/*"></div>
+    <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+   </form>
+  </div>
+ </div>
+}
+<div class="modal" id="edit-newtr">
+ <a class="modal__bg" href="#panel" aria-label="Закрыть"></a>
+ <div class="modal__box">
+  <a class="close" href="#panel" aria-label="Закрыть">×</a>
+  <form class="form" asp-action="SaveTrainer" method="post" enctype="multipart/form-data"><h3>Новый тренер</h3>
+   <input type="hidden" name="id" value="0">
+   <div class="field"><label>Имя и фамилия</label><input type="text" name="name" maxlength="150" required></div>
+   <div class="field"><label>Специализация</label><input type="text" name="spec" maxlength="200" required></div>
+   <div class="field"><label>Опыт, лет</label><input type="number" name="experience" required min="0" max="70"></div>
+   <div class="field"><label>Краткая биография</label><textarea name="bio" maxlength="1000"></textarea></div>
+   <div class="field"><label>Достижения (каждое с новой строки)</label><textarea name="awards" maxlength="1000"></textarea></div>
+   <div class="field"><label>Фото (необязательно, до 600 КБ)</label><input type="file" name="photo" accept="image/*"></div>
+   <div class="row"><button class="btn btn--pink" type="submit">Сохранить</button><a class="btn btn--outline" href="#panel">Отмена</a></div>
+  </form>
+ </div>
+</div>

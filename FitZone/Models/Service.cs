@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FitZone.Models
 {
-    // Таблица services (направления тренировок)
     [Table("services")]
     public class Service
     {

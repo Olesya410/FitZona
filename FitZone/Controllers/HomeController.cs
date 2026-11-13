@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using FitZone.Data;
 using FitZone.Models;
 using Microsoft.AspNetCore.Authentication;
@@ -6,14 +5,15 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FitZone.Controllers
 {
     public class HomeController : Controller
     {
-        private static readonly PasswordHasher<User> Hasher = new PasswordHasher<User>();
+        private const string ManagerRoles = Roles.Manager + "," + Roles.Admin;
+        private static readonly PasswordHasher<User> hasher = new PasswordHasher<User>();
 
-        // Через конструктор получаем доступ к базе данных
         private readonly AppDbContext _db;
 
         public HomeController(AppDbContext db)
@@ -48,22 +48,18 @@ namespace FitZone.Controllers
             return View(_db.Trainers.OrderBy(t => t.Id).ToList());
         }
 
-        // ---------- Запись на тренировку ----------
-
-        // service, trainer, date, time — необязательные значения из ссылок «Записаться» и формы на главной
         [HttpGet]
         public IActionResult Booking(int? service, int? trainer, string? date, string? time)
         {
-            var model = BuildBookingModel(service, trainer, date, time);
             if (TempData["BookOk"] != null)
             {
                 ViewData["BookState"] = "ok";
             }
-            return View(model);
+            return View(BuildBookingModel(service, trainer, date, time));
         }
 
         [HttpPost]
-        public IActionResult Booking(int service, int trainer, string? date, string? time)
+        public IActionResult Booking(int service, int trainer, string? date, string? time, bool agree)
         {
             var model = BuildBookingModel(service, trainer, date, time);
 
@@ -78,7 +74,7 @@ namespace FitZone.Controllers
                 return View(model);
             }
 
-            string? error = ValidateBooking(service, trainer, date, time, out var day, out var slot);
+            var error = CheckBooking(service, trainer, date, time, agree);
             if (error != null)
             {
                 ViewData["BookState"] = "error";
@@ -88,11 +84,11 @@ namespace FitZone.Controllers
 
             _db.Bookings.Add(new Booking
             {
-                UserId = CurrentUserId(),
+                UserId = GetUserId(),
                 ServiceId = service,
                 TrainerId = trainer,
-                TrainingDate = day,
-                TrainingTime = slot,
+                TrainingDate = DateTime.Parse(date!).Date,
+                TrainingTime = TimeSpan.Parse(time!),
                 Status = BookingStatuses.Pending,
                 CreatedAt = DateTime.Now
             });
@@ -101,68 +97,6 @@ namespace FitZone.Controllers
             TempData["BookOk"] = true;
             return RedirectToAction("Booking");
         }
-
-        private BookingViewModel BuildBookingModel(int? service, int? trainer, string? date, string? time)
-        {
-            return new BookingViewModel
-            {
-                Services = _db.Services.OrderBy(s => s.Id).ToList(),
-                Trainers = _db.Trainers.OrderBy(t => t.Id).ToList(),
-                Slots = _db.TimeSlots.OrderBy(s => s.SlotTime).ToList().Select(s => s.SlotTime.ToString("hh\\:mm")).ToList(),
-                ClosedDays = _db.ClosedDays.Where(c => c.ClosedDate >= DateTime.Today).OrderBy(c => c.ClosedDate).Select(c => c.ClosedDate).ToList(),
-                SelectedServiceId = service,
-                SelectedTrainerId = trainer,
-                SelectedDate = date ?? "",
-                SelectedTime = time ?? ""
-            };
-        }
-
-        // Возвращает текст ошибки или null, если заявку можно сохранять
-        private string? ValidateBooking(int service, int trainer, string? date, string? time, out DateTime day, out TimeSpan slot)
-        {
-            day = DateTime.MinValue;
-            slot = TimeSpan.Zero;
-
-            if (!_db.Services.Any(s => s.Id == service) || !_db.Trainers.Any(t => t.Id == trainer))
-            {
-                return "Выберите направление и тренера.";
-            }
-            if (!DateTime.TryParse(date, out var parsedDay))
-            {
-                return "Выберите дату занятия.";
-            }
-            // Внутри лямбд out-параметры использовать нельзя, поэтому работаем с локальными копиями
-            var bookingDay = parsedDay.Date;
-            day = bookingDay;
-            if (bookingDay < DateTime.Today)
-            {
-                return "Нельзя записаться на прошедшую дату.";
-            }
-            if (bookingDay.DayOfWeek == DayOfWeek.Sunday)
-            {
-                return "По воскресеньям записи нет.";
-            }
-            if (_db.ClosedDays.Any(c => c.ClosedDate == bookingDay))
-            {
-                return "На эту дату запись закрыта. Выберите другой день.";
-            }
-            if (!TimeSpan.TryParse(time, out var bookingTime))
-            {
-                return "Выберите время занятия.";
-            }
-            slot = bookingTime;
-            if (!_db.TimeSlots.Any(s => s.SlotTime == bookingTime))
-            {
-                return "Такого времени для записи нет. Выберите время из списка.";
-            }
-            if (_db.Bookings.Any(b => b.TrainerId == trainer && b.TrainingDate == bookingDay && b.TrainingTime == bookingTime && b.Status != BookingStatuses.Cancelled))
-            {
-                return "Это время у тренера уже занято. Выберите другое.";
-            }
-            return null;
-        }
-
-        // ---------- Отзывы ----------
 
         [HttpGet]
         public IActionResult Reviews()
@@ -185,15 +119,10 @@ namespace FitZone.Controllers
                 return RedirectToAction("Reviews");
             }
 
-            // Новый отзыв попадает на модерацию и появляется на сайте после одобрения админом
             var author = User.Identity?.Name ?? "Клиент";
-            if (author.Length > 100)
-            {
-                author = author.Substring(0, 100);
-            }
             _db.Reviews.Add(new Review
             {
-                AuthorName = author,
+                AuthorName = author.Length > 100 ? author.Substring(0, 100) : author,
                 Rating = rating,
                 ReviewDate = DateTime.Today,
                 Comment = comment,
@@ -205,12 +134,49 @@ namespace FitZone.Controllers
             return RedirectToAction("Reviews");
         }
 
+        [HttpGet]
         public IActionResult Contacts()
         {
+            if (TempData["FeedbackOk"] != null)
+            {
+                ViewData["FeedbackState"] = "ok";
+            }
             return View(_db.Contacts.FirstOrDefault() ?? new Contact());
         }
 
-        // ---------- Вход, регистрация, выход ----------
+        [HttpPost]
+        public IActionResult Contacts(string? name, string? contact, string? message)
+        {
+            if (string.IsNullOrWhiteSpace(name) || name.Trim().Length < 2)
+            {
+                ViewData["FeedbackError"] = "Укажите имя (минимум 2 символа).";
+            }
+            else if (string.IsNullOrWhiteSpace(contact))
+            {
+                ViewData["FeedbackError"] = "Укажите телефон или e-mail, чтобы мы могли ответить.";
+            }
+            else if (string.IsNullOrWhiteSpace(message) || message.Trim().Length < 5)
+            {
+                ViewData["FeedbackError"] = "Напишите сообщение (минимум 5 символов).";
+            }
+
+            if (ViewData["FeedbackError"] != null)
+            {
+                return View(_db.Contacts.FirstOrDefault() ?? new Contact());
+            }
+
+            _db.Feedbacks.Add(new Feedback
+            {
+                Name = name!.Trim(),
+                Contact = contact!.Trim(),
+                Message = message!.Trim(),
+                CreatedAt = DateTime.Now
+            });
+            _db.SaveChanges();
+
+            TempData["FeedbackOk"] = true;
+            return RedirectToAction("Contacts");
+        }
 
         [HttpGet]
         public IActionResult Login()
@@ -219,28 +185,18 @@ namespace FitZone.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string? email, string? password, string? returnUrl)
+        public async Task<IActionResult> Login(string? email, string? password)
         {
-            var mail = (email ?? "").Trim();
-            var user = _db.Users.FirstOrDefault(u => u.Email == mail);
+            var user = _db.Users.FirstOrDefault(u => u.Email == (email ?? "").Trim());
 
-            var ok = false;
-            if (user != null && !string.IsNullOrEmpty(user.PasswordHash))
-            {
-                ok = Hasher.VerifyHashedPassword(user, user.PasswordHash, password ?? "") != PasswordVerificationResult.Failed;
-            }
-            if (!ok || user == null)
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash)
+                || hasher.VerifyHashedPassword(user, user.PasswordHash, password ?? "") == PasswordVerificationResult.Failed)
             {
                 ViewData["Error"] = "Неверный e-mail или пароль.";
                 return View();
             }
 
             await SignInUser(user);
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
             return RedirectToCabinet(user.Role);
         }
 
@@ -257,42 +213,24 @@ namespace FitZone.Controllers
             var mail = (email ?? "").Trim();
             var pass = password ?? "";
 
-            string? error = null;
             if (fullName.Length < 2 || fullName.Length > 150)
-            {
-                error = "Введите имя (от 2 до 150 символов).";
-            }
+                ViewData["Error"] = "Введите имя (от 2 до 150 символов).";
             else if (mail.Length > 150 || !mail.Contains('@') || mail.Contains(' '))
-            {
-                error = "Введите корректный e-mail.";
-            }
+                ViewData["Error"] = "Введите корректный e-mail.";
             else if (pass.Length < 8 || !pass.Any(char.IsDigit))
-            {
-                error = "Пароль: минимум 8 символов и одна цифра.";
-            }
+                ViewData["Error"] = "Пароль: минимум 8 символов и одна цифра.";
             else if (pass != password2)
-            {
-                error = "Пароли не совпадают.";
-            }
+                ViewData["Error"] = "Пароли не совпадают.";
             else if (_db.Users.Any(u => u.Email == mail))
-            {
-                error = "Пользователь с таким e-mail уже зарегистрирован.";
-            }
+                ViewData["Error"] = "Пользователь с таким e-mail уже зарегистрирован.";
 
-            if (error != null)
+            if (ViewData["Error"] != null)
             {
-                ViewData["Error"] = error;
                 return View();
             }
 
-            var user = new User
-            {
-                FullName = fullName,
-                Email = mail,
-                Role = Roles.Client,
-                CreatedAt = DateTime.Now
-            };
-            user.PasswordHash = Hasher.HashPassword(user, pass);
+            var user = new User { FullName = fullName, Email = mail, Role = Roles.Client, CreatedAt = DateTime.Now };
+            user.PasswordHash = hasher.HashPassword(user, pass);
             _db.Users.Add(user);
             _db.SaveChanges();
 
@@ -307,13 +245,160 @@ namespace FitZone.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize]
+        [HttpGet]
+        public IActionResult Account()
+        {
+            var userId = GetUserId();
+            var user = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                return RedirectToAction("Logout");
+            }
+
+            var bookings = _db.Bookings.Where(b => b.UserId == userId).OrderBy(b => b.TrainingDate).ToList();
+            var today = DateTime.Today;
+
+            ViewBag.Upcoming = bookings.Where(b => b.TrainingDate >= today && b.Status == BookingStatuses.Confirmed).ToList();
+            ViewBag.History = bookings.Where(b => b.TrainingDate < today || b.Status != BookingStatuses.Confirmed)
+                .OrderByDescending(b => b.TrainingDate).ToList();
+            ViewBag.Services = _db.Services.ToDictionary(s => s.Id, s => s.Name);
+            ViewBag.Trainers = _db.Trainers.ToDictionary(t => t.Id, t => t.FullName);
+
+            return View(user);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult UpdateProfile(string? fullName, string? phone)
+        {
+            var userId = GetUserId();
+            var user = _db.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null)
+            {
+                return RedirectToAction("Logout");
+            }
+
+            if (string.IsNullOrWhiteSpace(fullName) || fullName.Trim().Length < 2)
+            {
+                TempData["ProfileError"] = "Имя должно быть не короче 2 символов.";
+                return RedirectToAction("Account");
+            }
+
+            user.FullName = fullName.Trim();
+            if (!string.IsNullOrWhiteSpace(phone))
+            {
+                user.Phone = phone.Trim();
+            }
+            _db.SaveChanges();
+
+            TempData["ProfileOk"] = true;
+            return RedirectToAction("Account");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult CancelBooking(int cancelId)
+        {
+            var userId = GetUserId();
+            var booking = _db.Bookings.FirstOrDefault(b => b.Id == cancelId && b.UserId == userId);
+            if (booking == null)
+            {
+                return RedirectToAction("Account");
+            }
+
+            if ((booking.TrainingDate + booking.TrainingTime - DateTime.Now).TotalHours < 24)
+            {
+                TempData["BookingError"] = "Отменить запись можно не позднее чем за 24 часа до начала.";
+                return RedirectToAction("Account");
+            }
+
+            booking.Status = BookingStatuses.Cancelled;
+            _db.SaveChanges();
+
+            TempData["BookingOk"] = true;
+            return RedirectToAction("Account");
+        }
+
+        [Authorize(Roles = ManagerRoles)]
+        [HttpGet]
+        public IActionResult Manager()
+        {
+            var reviews = _db.Reviews.OrderByDescending(r => r.ReviewDate).ToList();
+
+            ViewBag.Bookings = _db.Bookings.OrderByDescending(b => b.TrainingDate).ToList();
+            ViewBag.Services = _db.Services.ToDictionary(s => s.Id, s => s.Name);
+            ViewBag.Trainers = _db.Trainers.ToDictionary(t => t.Id, t => t.FullName);
+            ViewBag.Users = _db.Users.ToDictionary(u => u.Id, u => (u.FullName, Email: u.Email, Phone: u.Phone ?? ""));
+            ViewBag.Feedbacks = _db.Feedbacks.OrderByDescending(f => f.CreatedAt).ToList();
+            ViewBag.ReviewsModeration = reviews.Where(r => !r.IsApproved).ToList();
+            ViewBag.ReviewsPublished = reviews.Where(r => r.IsApproved).ToList();
+
+            return View();
+        }
+
+        [Authorize(Roles = ManagerRoles)]
+        [HttpPost]
+        public IActionResult UpdateStatuses()
+        {
+            foreach (var booking in _db.Bookings.ToList())
+            {
+                var status = Request.Form["status_" + booking.Id].ToString();
+                if (BookingStatuses.All.Contains(status))
+                {
+                    booking.Status = status;
+                }
+            }
+            _db.SaveChanges();
+
+            TempData["StatusesOk"] = true;
+            return RedirectToAction("Manager");
+        }
+
+        [Authorize(Roles = ManagerRoles)]
+        [HttpPost]
+        public IActionResult ApproveReview(int id)
+        {
+            var review = _db.Reviews.Find(id);
+            if (review != null)
+            {
+                review.IsApproved = true;
+                _db.SaveChanges();
+            }
+            return RedirectToAction("Manager");
+        }
+
+        [Authorize(Roles = ManagerRoles)]
+        [HttpPost]
+        public IActionResult RejectReview(int id)
+        {
+            var review = _db.Reviews.Find(id);
+            if (review != null)
+            {
+                _db.Reviews.Remove(review);
+                _db.SaveChanges();
+            }
+            return RedirectToAction("Manager");
+        }
+
+        [Authorize(Roles = Roles.Admin)]
+        public IActionResult Admin()
+        {
+            return RedirectToAction("Index", "Admin");
+        }
+
+        private int GetUserId()
+        {
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id);
+            return id;
+        }
+
         private async Task SignInUser(User user)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.FullName),
-                new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role)
             };
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -327,29 +412,62 @@ namespace FitZone.Controllers
             return RedirectToAction("Account");
         }
 
-        private int CurrentUserId()
+        private BookingViewModel BuildBookingModel(int? service, int? trainer, string? date, string? time)
         {
-            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id);
-            return id;
+            var booked = new List<string>();
+            if (trainer != null && DateTime.TryParse(date, out var day))
+            {
+                var bookingDay = day.Date;
+                booked = _db.Bookings
+                    .Where(b => b.TrainerId == trainer && b.TrainingDate == bookingDay && b.Status != BookingStatuses.Cancelled)
+                    .Select(b => b.TrainingTime.ToString("hh\\:mm"))
+                    .ToList();
+            }
+
+            return new BookingViewModel
+            {
+                Services = _db.Services.OrderBy(s => s.Id).ToList(),
+                Trainers = _db.Trainers.OrderBy(t => t.Id).ToList(),
+                Slots = _db.TimeSlots.OrderBy(s => s.SlotTime).ToList().Select(s => s.SlotTime.ToString("hh\\:mm")).ToList(),
+                ClosedDays = _db.ClosedDays.Where(c => c.ClosedDate >= DateTime.Today).OrderBy(c => c.ClosedDate).Select(c => c.ClosedDate).ToList(),
+                BookedTimes = booked,
+                SelectedServiceId = service,
+                SelectedTrainerId = trainer,
+                SelectedDate = date ?? "",
+                SelectedTime = time ?? ""
+            };
         }
 
-        // ---------- Кабинеты ----------
-
-        public IActionResult Account()
+        private string? CheckBooking(int service, int trainer, string? date, string? time, bool agree)
         {
-            return View();
-        }
+            if (!_db.Services.Any(s => s.Id == service) || !_db.Trainers.Any(t => t.Id == trainer))
+                return "Выберите направление и тренера.";
 
-        public IActionResult Manager()
-        {
-            return View();
-        }
+            if (!DateTime.TryParse(date, out var parsedDay))
+                return "Выберите дату занятия.";
+            var day = parsedDay.Date;
 
-        // Ссылка «Админ-панель» в шапке ведёт сюда; сама панель — в AdminController
-        [Authorize(Roles = Roles.Admin)]
-        public IActionResult Admin()
-        {
-            return RedirectToAction("Index", "Admin");
+            if (day < DateTime.Today)
+                return "Нельзя записаться на прошедшую дату.";
+            if (day.DayOfWeek == DayOfWeek.Sunday)
+                return "По воскресеньям записи нет.";
+            if (_db.ClosedDays.Any(c => c.ClosedDate == day))
+                return "На эту дату запись закрыта. Выберите другой день.";
+
+            if (!TimeSpan.TryParse(time, out var slot))
+                return "Выберите время занятия.";
+            if (!_db.TimeSlots.Any(s => s.SlotTime == slot))
+                return "Такого времени для записи нет. Выберите время из списка.";
+            if (!agree)
+                return "Подтвердите согласие на обработку персональных данных.";
+
+            var userId = GetUserId();
+            if (_db.Bookings.Any(b => b.TrainerId == trainer && b.TrainingDate == day && b.TrainingTime == slot && b.Status != BookingStatuses.Cancelled))
+                return "Это время у тренера уже занято. Выберите другое.";
+            if (_db.Bookings.Any(b => b.UserId == userId && b.TrainingDate == day && b.TrainingTime == slot && b.Status != BookingStatuses.Cancelled))
+                return "Вы уже записаны на это время. Отмените старую запись в личном кабинете.";
+
+            return null;
         }
     }
 }

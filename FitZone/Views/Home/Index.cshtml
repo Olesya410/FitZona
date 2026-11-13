@@ -1,10 +1,6 @@
-﻿@model IndexViewModel
+@model IndexViewModel
 @{
     ViewData["Title"] = "Главная";
-    var phone = Model.Contact.Phone ?? "";
-    var phoneLink = "tel:" + new string(phone.Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
-    var email = Model.Contact.Email ?? "";
-    var emailLink = "mailto:" + email;
 }
 
 <section class="hero">
@@ -108,8 +104,8 @@
   <div class="grid grid--2">
    <ul class="contact-list">
     <li><b>Адрес</b><span>@Model.Contact.Address</span></li>
-    <li><b>Телефон</b><a href="@phoneLink">@phone</a></li>
-    <li><b>Электронная почта</b><a href="@emailLink">@email</a></li>
+    <li><b>Телефон</b><a href="tel:@Model.Contact.Phone">@Model.Contact.Phone</a></li>
+    <li><b>Электронная почта</b><a href="mailto:@Model.Contact.Email">@Model.Contact.Email</a></li>
     <li><a class="btn btn--dark btn--sm" asp-controller="Home" asp-action="Contacts">Все контакты</a></li>
    </ul>
    <iframe class="map" title="Карта проезда" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=37.55%2C55.73%2C37.68%2C55.78&amp;layer=mapnik"></iframe>

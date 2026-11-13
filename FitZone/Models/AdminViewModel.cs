@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // Строка таблицы заявок в админ-панели (запись + имена из связанных таблиц)
     public class AdminBookingRow
     {
         public int Id { get; set; }
@@ -14,7 +13,6 @@ namespace FitZone.Models
         public string Status { get; set; } = "";
     }
 
-    // Все данные для страницы админ-панели
     public class AdminViewModel
     {
         public string Tab { get; set; } = "req";

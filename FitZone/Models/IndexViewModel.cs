@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // Все данные, которые нужны главной странице
     public class IndexViewModel
     {
         public List<Service> Services { get; set; } = new();

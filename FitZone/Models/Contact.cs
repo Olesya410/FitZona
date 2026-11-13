@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // Таблица Contacts (контакты центра, в таблице одна строка)
     public class Contact
     {
         public int Id { get; set; }

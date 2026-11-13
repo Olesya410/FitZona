@@ -2,41 +2,138 @@
     ViewData["Title"] = "Панель менеджера";
     ViewData["CabinetText"] = "Панель менеджера";
     ViewData["CabinetAction"] = "Manager";
+
+    var bookings = ViewBag.Bookings as List<FitZone.Models.Booking>;
+    var services = ViewBag.Services as Dictionary<int, string>;
+    var trainers = ViewBag.Trainers as Dictionary<int, string>;
+    var users = ViewBag.Users as Dictionary<int, (string Name, string Email, string Phone)>;
+    var feedbacks = ViewBag.Feedbacks as List<FitZone.Models.Feedback>;
+    var reviewsMod = ViewBag.ReviewsModeration as List<FitZone.Models.Review>;
+    var reviewsPub = ViewBag.ReviewsPublished as List<FitZone.Models.Review>;
+    var saved = TempData["StatusesOk"] != null;
+
+    string ClientName(FitZone.Models.Booking b) =>
+        users != null && users.ContainsKey(b.UserId) ? users[b.UserId].Name : "Клиент";
+    string ClientContact(FitZone.Models.Booking b)
+    {
+        if (users == null || !users.ContainsKey(b.UserId)) return "";
+        var u = users[b.UserId];
+        return !string.IsNullOrEmpty(u.Phone) ? u.Phone : u.Email;
+    }
+    string ServiceName(FitZone.Models.Booking b) =>
+        services != null && services.ContainsKey(b.ServiceId) ? services[b.ServiceId] : "Услуга";
+    string TrainerName(FitZone.Models.Booking b) =>
+        trainers != null && trainers.ContainsKey(b.TrainerId) ? trainers[b.TrainerId] : "Тренер";
 }
 
-<section class="page-hero"><div class="container"><div><h1>Панель менеджера</h1><p>Просмотр заявок, подтверждение и обработка записей, просмотр отзывов.</p></div><img src="~/img/cat-drink.png" alt=""></div></section>
-<section class="section"><div class="container">
- <div id="panel">
-  <div style="margin-bottom:18px">Вы вошли как <b id="whoami">Мария Менеджер</b> · роль: <b>Менеджер</b> <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;margin-left:10px"><button class="btn btn--outline btn--sm" type="submit">Выйти</button></form></div>
-  <div class="panel tabgroup">
-   <input class="tab-radio" type="radio" name="tab" id="tab-req" checked><input class="tab-radio" type="radio" name="tab" id="tab-mod">
-   <div class="tabs"><label class="tab" for="tab-req">Заявки</label><label class="tab" for="tab-mod">Отзывы (просмотр)</label></div>
-   <div data-pane="req"><form method="post"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Контакт</th><th>Услуга</th><th>Тренер</th><th>Дата и время</th><th>Статус</th></tr></thead><tbody id="reqBody">
-      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td>Йога</td><td>Анна Волкова</td><td>21.10.2026 18:00</td>
-      <td><select name="status_101"><option>Ожидает подтверждения</option><option>Подтверждена</option><option>Отменена</option><option selected>Проведена</option></select></td></tr>
-      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td>Пилатес</td><td>Анна Волкова</td><td>28.10.2026 18:00</td>
-      <td><select name="status_102"><option>Ожидает подтверждения</option><option>Подтверждена</option><option>Отменена</option><option selected>Проведена</option></select></td></tr>
-      <tr><td>Олег Смирнов</td><td>+7 911 000-11-22</td><td>Силовые тренировки</td><td>Максим Орлов</td><td>10.11.2026 10:30</td>
-      <td><select name="status_104"><option selected>Ожидает подтверждения</option><option>Подтверждена</option><option>Отменена</option><option>Проведена</option></select></td></tr>
-      <tr><td>Марина Белова</td><td>marina@@example.com</td><td>Кардио и HIIT</td><td>Елена Северина</td><td>11.11.2026 19:30</td>
-      <td><select name="status_105"><option>Ожидает подтверждения</option><option selected>Подтверждена</option><option>Отменена</option><option>Проведена</option></select></td></tr>
-      <tr><td>Анастасия Иванова</td><td>user@@fitzone.ru</td><td>Йога</td><td>Анна Волкова</td><td>12.11.2026 18:00</td>
-      <td><select name="status_103"><option>Ожидает подтверждения</option><option selected>Подтверждена</option><option>Отменена</option><option>Проведена</option></select></td></tr>
-   </tbody></table></div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить статусы</button></p></form></div>
-   <div data-pane="mod"><h4>На модерации</h4><ul class="list" id="modList"><li>Новых отзывов на модерации нет</li></ul><h4 style="margin-top:30px">Опубликованные отзывы</h4><form method="post"><ul class="list" id="pubList">
-      <li><span><b>Ольга К.</b> <span class="stars" aria-label="Оценка 5 из 5">★★★★★<span class="off"></span></span> <small>28.10.2026</small><br><small>Хожу на йогу к Анне уже полгода. Спина перестала болеть, а настроение стало лучше. Очень уютный зал.</small></span>
-      </li>
-      <li><span><b>Дмитрий П.</b> <span class="stars" aria-label="Оценка 5 из 5">★★★★★<span class="off"></span></span> <small>15.10.2026</small><br><small>Максим объяснил технику приседа и становой так, что я наконец понял, что делал неправильно. Рекомендую.</small></span>
-      </li>
-      <li><span><b>Екатерина М.</b> <span class="stars" aria-label="Оценка 4 из 5">★★★★<span class="off">★</span></span> <small>02.10.2026</small><br><small>HIIT у Елены — это огонь! Тяжело, но интересно. Хотелось бы побольше вечерних групп.</small></span>
-      </li>
-      <li><span><b>Сергей Л.</b> <span class="stars" aria-label="Оценка 5 из 5">★★★★★<span class="off"></span></span> <small>20.09.2026</small><br><small>Чистые раздевалки, современные тренажёры, никакой толкотни. Записаться онлайн очень просто.</small></span>
-      </li>
-      <li><span><b>Анна Т.</b> <span class="stars" aria-label="Оценка 4 из 5">★★★★<span class="off">★</span></span> <small>05.09.2026</small><br><small>Пилатес мне подошёл идеально. Минус один: в час пик немного шумно в холле.</small></span>
-      </li>
-      <li><span><b>Виктор Н.</b> <span class="stars" aria-label="Оценка 3 из 5">★★★<span class="off">★★</span></span> <small>19.08.2026</small><br><small>Хороший зал, но в субботу пришлось ждать начала занятия минут десять. Тренер отработал отлично.</small></span>
-      </li>
-   </ul></form></div>
-  </div>
- </div>
-</div></section>
+<section class="page-hero"><div class="container"><div><h1>Панель менеджера</h1>
+    <p>Просмотр заявок, подтверждение и обработка записей, обратная связь и отзывы.</p>
+    </div><img src="~/img/cat-drink.png" alt=""></div></section>
+<section class="section">
+    <div class="container">
+        <div id="panel">
+            <div style="margin-bottom:18px">Вы вошли как <b>@(User.Identity?.Name ?? "Менеджер")</b> · роль: <b>Менеджер</b> <form asp-controller="Home" asp-action="Logout" method="post" style="display:inline;margin-left:10px"><button class="btn btn--outline btn--sm" type="submit">Выйти</button></form></div>
+            <div class="panel tabgroup">
+                <input class="tab-radio" type="radio" name="tab" id="tab-req" checked><input class="tab-radio" type="radio" name="tab" id="tab-fb"><input class="tab-radio" type="radio" name="tab" id="tab-mod">
+                <div class="tabs"><label class="tab" for="tab-req">Заявки</label><label class="tab" for="tab-fb">Обратная связь</label><label class="tab" for="tab-mod">Отзывы</label></div>
+
+                <div class="notice notice--ok @(saved ? "" : "hidden")" role="alert">Статусы сохранены.</div>
+
+                <div data-pane="req">
+                    <form method="post" asp-action="UpdateStatuses">
+                        <div class="table-wrap">
+                            <table>
+                                <thead><tr><th>Клиент</th><th>Контакт</th><th>Услуга</th><th>Тренер</th><th>Дата и время</th><th>Статус</th></tr></thead>
+                                <tbody id="reqBody">
+                                    @if (bookings != null && bookings.Any())
+                                    {
+                                        foreach (var b in bookings)
+                                        {
+                                            <tr>
+                                                <td>@ClientName(b)</td>
+                                                <td>@ClientContact(b)</td>
+                                                <td>@ServiceName(b)</td>
+                                                <td>@TrainerName(b)</td>
+                                                <td>@b.TrainingDate.ToString("dd.MM.yyyy") @b.TrainingTime.ToString(@"hh\:mm")</td>
+                                                <td>
+                                                    <select name="status_@b.Id">
+                                                        @foreach (var status in BookingStatuses.All)
+                                                        {
+                                                            <option selected="@(b.Status == status)">@status</option>
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr><td colspan="6">Заявок пока нет.</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить статусы</button></p>
+                    </form>
+                </div>
+
+                <div data-pane="fb">
+                    <h4>Обратная связь</h4>
+                    <ul class="list">
+                        @if (feedbacks != null && feedbacks.Any())
+                        {
+                            foreach (var f in feedbacks)
+                            {
+                                <li><span><b>@f.Name</b> <small>· @f.Contact · @f.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small><br><small>@f.Message</small></span></li>
+                            }
+                        }
+                        else
+                        {
+                            <li>Сообщений пока нет</li>
+                        }
+                    </ul>
+
+                </div>
+
+
+                <div data-pane="mod">
+                    <h4>На модерации</h4>
+                    <ul class="list" id="modList">
+                        @if (reviewsMod != null && reviewsMod.Any())
+                        {
+                            foreach (var r in reviewsMod)
+                            {
+                                <li>
+                                    <span><b>@r.AuthorName</b> <small>@r.ReviewDate.ToString("dd.MM.yyyy")</small><br><small>@r.Comment</small></span>
+                                    <span>
+                                        <form method="post" asp-action="ApproveReview" style="display:inline"><input type="hidden" name="id" value="@r.Id"><button class="btn btn--dark btn--sm" type="submit">Опубликовать</button></form>
+                                        <form method="post" asp-action="RejectReview" style="display:inline;margin-left:6px"><input type="hidden" name="id" value="@r.Id"><button class="btn btn--outline btn--sm" type="submit">Отклонить</button></form>
+                                    </span>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li>Новых отзывов на модерации нет</li>
+                        }
+                    </ul>
+                    <h4 style="margin-top:30px">Опубликованные отзывы</h4>
+                    <ul class="list" id="pubList">
+                        @if (reviewsPub != null && reviewsPub.Any())
+                        {
+                            foreach (var r in reviewsPub)
+                            {
+                                var stars = new string('★', r.Rating) + new string('☆', 5 - r.Rating);
+                                <li><span><b>@r.AuthorName</b> <span class="stars" aria-label="Оценка @r.Rating из 5">@stars</span> <small>@r.ReviewDate.ToString("dd.MM.yyyy")</small><br><small>@r.Comment</small></span></li>
+                            }
+                        }
+                        else
+                        {
+                            <li>Опубликованных отзывов пока нет</li>
+                        }
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

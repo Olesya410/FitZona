@@ -33,7 +33,6 @@
    <input class="tab-radio" type="radio" name="tab" id="tab-req" checked="@tReq"><input class="tab-radio" type="radio" name="tab" id="tab-mod" checked="@tMod"><input class="tab-radio" type="radio" name="tab" id="tab-svc" checked="@tSvc"><input class="tab-radio" type="radio" name="tab" id="tab-tr" checked="@tTr"><input class="tab-radio" type="radio" name="tab" id="tab-sch" checked="@tSch"><input class="tab-radio" type="radio" name="tab" id="tab-usr" checked="@tUsr"><input class="tab-radio" type="radio" name="tab" id="tab-set" checked="@tSet">
    <div class="tabs"><label class="tab" for="tab-req">Заявки</label><label class="tab" for="tab-mod">Отзывы</label><label class="tab" for="tab-svc">Услуги</label><label class="tab" for="tab-tr">Тренеры</label><label class="tab" for="tab-sch">Расписание</label><label class="tab" for="tab-usr">Пользователи и роли</label><label class="tab" for="tab-set">Контакты и настройки</label></div>
 
-   @* ===== Заявки ===== *@
    <div data-pane="req">
     @if (Model.Bookings.Count == 0)
     {
@@ -56,7 +55,6 @@
     }
    </div>
 
-   @* ===== Отзывы ===== *@
    <div data-pane="mod">
     <h4>На модерации</h4>
     <ul class="list">
@@ -87,7 +85,6 @@
     </ul>
    </div>
 
-   @* ===== Услуги ===== *@
    <div data-pane="svc">
     <p><a class="btn btn--pink btn--sm" href="#edit-newsvc">+ Добавить услугу</a></p>
     <div class="table-wrap"><table><thead><tr><th>Услуга</th><th>Длительность</th><th>Группа</th><th>Цена</th><th></th></tr></thead><tbody>
@@ -101,7 +98,6 @@
     </tbody></table></div>
    </div>
 
-   @* ===== Тренеры ===== *@
    <div data-pane="tr">
     <p><a class="btn btn--pink btn--sm" href="#edit-newtr">+ Добавить тренера</a></p>
     <div class="table-wrap"><table><thead><tr><th>Тренер</th><th>Специализация</th><th>Опыт</th><th></th></tr></thead><tbody>
@@ -116,7 +112,6 @@
     </tbody></table></div>
    </div>
 
-   @* ===== Расписание ===== *@
    <div data-pane="sch">
     <h4>Время занятий</h4>
     <div class="slots">
@@ -143,7 +138,6 @@
     <form class="inline-form" asp-action="AddClosedDay" method="post"><input type="date" name="newClosed" required><button class="btn btn--dark btn--sm" type="submit">Закрыть день</button></form>
    </div>
 
-   @* ===== Пользователи и роли ===== *@
    <div data-pane="usr">
     <form asp-action="SaveRoles" method="post"><div class="table-wrap"><table><thead><tr><th>Имя</th><th>E-mail</th><th>Роль</th><th></th></tr></thead><tbody>
      @foreach (var u in Model.Users)
@@ -158,7 +152,6 @@
     </tbody></table></div><p><button class="btn btn--dark btn--sm" type="submit">Сохранить роли</button></p></form>
    </div>
 
-   @* ===== Контакты и настройки ===== *@
    <div data-pane="set">
     <form class="form form--2" asp-action="SaveSettings" method="post">
      <div class="field"><label for="st_address">Адрес</label><input id="st_address" name="address" value="@Model.Contact.Address" maxlength="200" required></div>
@@ -172,7 +165,6 @@
  </div>
 </div></section>
 
-@* ===== Окна «Изменить» (открываются по якорю, без JavaScript) ===== *@
 @foreach (var s in Model.Services)
 {
  var modalId = "edit-svc-" + s.Id;

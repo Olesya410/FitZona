@@ -6,14 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FitZone.Controllers
 {
-    // Админ-панель: доступна только пользователям с ролью «Администратор»
     [Authorize(Roles = Roles.Admin)]
     public class AdminController : Controller
     {
-        private const long MaxPhotoBytes = 600 * 1024;
-        private const string TrainerPhotoDir = "img/trainers/";
-        private static readonly string[] PhotoExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif" };
         private static readonly string[] Tabs = { "req", "mod", "svc", "tr", "sch", "usr", "set" };
+        private static readonly string[] PhotoExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif" };
 
         private readonly AppDbContext _db;
         private readonly IWebHostEnvironment _env;
@@ -29,8 +26,8 @@ namespace FitZone.Controllers
         {
             var model = new AdminViewModel
             {
-                Tab = (tab != null && Tabs.Contains(tab)) ? tab : "req",
-                CurrentUserId = CurrentUserId(),
+                Tab = tab != null && Tabs.Contains(tab) ? tab : "req",
+                CurrentUserId = GetUserId(),
                 CurrentUserName = User.Identity?.Name ?? "Администратор",
                 Bookings = (from b in _db.Bookings
                             join u in _db.Users on b.UserId equals u.Id
@@ -61,146 +58,113 @@ namespace FitZone.Controllers
             return View(model);
         }
 
-        // ---------- Заявки ----------
-
         [HttpPost]
         public IActionResult SaveBookings(IFormCollection form)
         {
-            var wanted = new Dictionary<int, string>();
-            foreach (var key in form.Keys)
+            foreach (var booking in _db.Bookings.ToList())
             {
-                if (key.StartsWith("status_") && int.TryParse(key.Substring(7), out var id))
+                var status = form["status_" + booking.Id].ToString();
+                if (BookingStatuses.All.Contains(status))
                 {
-                    wanted[id] = form[key].ToString();
-                }
-            }
-
-            var ids = wanted.Keys.ToList();
-            var rows = _db.Bookings.Where(b => ids.Contains(b.Id)).ToList();
-            var changed = 0;
-            foreach (var b in rows)
-            {
-                var status = wanted[b.Id];
-                if (BookingStatuses.All.Contains(status) && b.Status != status)
-                {
-                    b.Status = status;
-                    changed++;
+                    booking.Status = status;
                 }
             }
             _db.SaveChanges();
 
-            TempData["Ok"] = changed > 0 ? "Статусы заявок сохранены." : "Изменений в статусах нет.";
-            return Back("req");
+            return Done("req", "Статусы заявок сохранены.");
         }
 
         [HttpPost]
         public IActionResult DeleteBooking(int id)
         {
-            var b = _db.Bookings.Find(id);
-            if (b != null)
+            var booking = _db.Bookings.Find(id);
+            if (booking != null)
             {
-                _db.Bookings.Remove(b);
+                _db.Bookings.Remove(booking);
                 _db.SaveChanges();
-                TempData["Ok"] = "Заявка удалена.";
             }
-            return Back("req");
+            return Done("req", "Заявка удалена.");
         }
-
-        // ---------- Отзывы ----------
 
         [HttpPost]
         public IActionResult ApproveReview(int id)
         {
-            var r = _db.Reviews.Find(id);
-            if (r != null)
+            var review = _db.Reviews.Find(id);
+            if (review != null)
             {
-                r.IsApproved = true;
+                review.IsApproved = true;
                 _db.SaveChanges();
-                TempData["Ok"] = "Отзыв опубликован на сайте.";
             }
-            return Back("mod");
+            return Done("mod", "Отзыв опубликован на сайте.");
         }
 
         [HttpPost]
         public IActionResult DeleteReview(int id)
         {
-            var r = _db.Reviews.Find(id);
-            if (r != null)
+            var review = _db.Reviews.Find(id);
+            if (review != null)
             {
-                _db.Reviews.Remove(r);
+                _db.Reviews.Remove(review);
                 _db.SaveChanges();
-                TempData["Ok"] = "Отзыв удалён.";
             }
-            return Back("mod");
+            return Done("mod", "Отзыв удалён.");
         }
 
-        // ---------- Услуги ----------
-
-        // id = 0 — новая услуга, иначе правим существующую
         [HttpPost]
         public IActionResult SaveService(int id, string? name, int duration, int? maxGroup, int price, string? desc)
         {
             var title = (name ?? "").Trim();
             var text = (desc ?? "").Trim();
 
-            if (title.Length == 0 || title.Length > 100 || duration < 10 || price < 0 || (maxGroup.HasValue && maxGroup.Value < 1) || text.Length > 500)
+            if (title.Length == 0 || title.Length > 100 || duration < 10 || price < 0 || (maxGroup ?? 1) < 1 || text.Length > 500)
             {
-                TempData["Err"] = "Проверьте поля услуги: название до 100 символов, длительность от 10 минут, цена не меньше 0, описание до 500 символов.";
-                return Back("svc");
+                return Fail("svc", "Проверьте поля услуги: название до 100 символов, длительность от 10 минут, цена не меньше 0, описание до 500 символов.");
             }
 
-            var s = id == 0 ? new Service() : _db.Services.Find(id);
-            if (s == null)
+            var service = id == 0 ? new Service() : _db.Services.Find(id);
+            if (service == null)
             {
-                TempData["Err"] = "Услуга не найдена.";
-                return Back("svc");
+                return Fail("svc", "Услуга не найдена.");
             }
 
-            s.Name = title;
-            s.DurationMinutes = duration;
-            s.MaxGroupSize = maxGroup;
-            s.PricePerSession = price;
-            s.Description = text.Length == 0 ? null : text;
+            service.Name = title;
+            service.DurationMinutes = duration;
+            service.MaxGroupSize = maxGroup;
+            service.PricePerSession = price;
+            service.Description = text.Length == 0 ? null : text;
 
             if (id == 0)
             {
-                _db.Services.Add(s);
+                _db.Services.Add(service);
             }
             _db.SaveChanges();
 
-            TempData["Ok"] = id == 0 ? "Услуга добавлена." : "Услуга сохранена.";
-            return Back("svc");
+            return Done("svc", "Услуга сохранена.");
         }
 
         [HttpPost]
         public IActionResult DeleteService(int id)
         {
-            var s = _db.Services.Find(id);
-            if (s == null)
+            var service = _db.Services.Find(id);
+            if (service == null)
             {
                 return Back("svc");
             }
             if (_db.Bookings.Any(b => b.ServiceId == id))
             {
-                TempData["Err"] = "Нельзя удалить услугу «" + s.Name + "»: на неё есть записи. Сначала удалите или завершите эти заявки.";
-                return Back("svc");
+                return Fail("svc", "Нельзя удалить услугу «" + service.Name + "»: на неё есть записи.");
             }
 
-            // Отзывы остаются, просто теряют привязку к услуге
-            foreach (var r in _db.Reviews.Where(x => x.ServiceId == id).ToList())
+            foreach (var review in _db.Reviews.Where(r => r.ServiceId == id))
             {
-                r.ServiceId = null;
+                review.ServiceId = null;
             }
-            _db.Services.Remove(s);
+            _db.Services.Remove(service);
             _db.SaveChanges();
 
-            TempData["Ok"] = "Услуга удалена.";
-            return Back("svc");
+            return Done("svc", "Услуга удалена.");
         }
 
-        // ---------- Тренеры ----------
-
-        // id = 0 — новый тренер, иначе правим существующего
         [HttpPost]
         public IActionResult SaveTrainer(int id, string? name, string? spec, int experience, string? bio, string? awards, IFormFile? photo)
         {
@@ -212,135 +176,101 @@ namespace FitZone.Controllers
             if (fullName.Length == 0 || fullName.Length > 150 || specialization.Length == 0 || specialization.Length > 200
                 || experience < 0 || experience > 70 || biography.Length > 1000 || achievements.Length > 1000)
             {
-                TempData["Err"] = "Проверьте поля тренера: имя до 150 символов, специализация до 200, опыт от 0 до 70 лет, биография и достижения до 1000 символов.";
-                return Back("tr");
+                return Fail("tr", "Проверьте поля тренера: имя до 150 символов, специализация до 200, опыт от 0 до 70 лет, биография и достижения до 1000 символов.");
             }
 
-            var t = id == 0 ? new Trainer() : _db.Trainers.Find(id);
-            if (t == null)
+            var trainer = id == 0 ? new Trainer() : _db.Trainers.Find(id);
+            if (trainer == null)
             {
-                TempData["Err"] = "Тренер не найден.";
-                return Back("tr");
+                return Fail("tr", "Тренер не найден.");
             }
 
-            string? newPath = null;
             if (photo != null && photo.Length > 0)
             {
-                var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
-                if (photo.Length > MaxPhotoBytes || !PhotoExtensions.Contains(ext))
+                var extension = Path.GetExtension(photo.FileName).ToLowerInvariant();
+                if (photo.Length > 600 * 1024 || !PhotoExtensions.Contains(extension))
                 {
-                    TempData["Err"] = "Фото должно быть изображением (jpg, png, webp, gif, avif) размером до 600 КБ.";
-                    return Back("tr");
+                    return Fail("tr", "Фото должно быть изображением (jpg, png, webp, gif, avif) размером до 600 КБ.");
                 }
 
-                var dir = Path.Combine(_env.WebRootPath, "img", "trainers");
-                Directory.CreateDirectory(dir);
-                var fileName = Guid.NewGuid().ToString("N") + ext;
-                using (var stream = System.IO.File.Create(Path.Combine(dir, fileName)))
+                var fileName = Guid.NewGuid().ToString("N") + extension;
+                var folder = Path.Combine(_env.WebRootPath, "img", "trainers");
+                Directory.CreateDirectory(folder);
+                using (var stream = System.IO.File.Create(Path.Combine(folder, fileName)))
                 {
                     photo.CopyTo(stream);
                 }
-                newPath = TrainerPhotoDir + fileName;
+                trainer.ImagePath = "img/trainers/" + fileName;
             }
 
-            t.FullName = fullName;
-            t.Specialization = specialization;
-            t.ExperienceYears = experience;
-            t.Biography = biography.Length == 0 ? null : biography;
-            t.Achievements = achievements.Length == 0 ? null : achievements;
-
-            if (newPath != null)
-            {
-                DeleteUploadedPhoto(t.ImagePath);
-                t.ImagePath = newPath;
-            }
+            trainer.FullName = fullName;
+            trainer.Specialization = specialization;
+            trainer.ExperienceYears = experience;
+            trainer.Biography = biography.Length == 0 ? null : biography;
+            trainer.Achievements = achievements.Length == 0 ? null : achievements;
 
             if (id == 0)
             {
-                _db.Trainers.Add(t);
+                _db.Trainers.Add(trainer);
             }
             _db.SaveChanges();
 
-            TempData["Ok"] = id == 0 ? "Тренер добавлен." : "Тренер сохранён.";
-            return Back("tr");
+            return Done("tr", "Тренер сохранён.");
         }
 
         [HttpPost]
         public IActionResult DeleteTrainer(int id)
         {
-            var t = _db.Trainers.Find(id);
-            if (t == null)
+            var trainer = _db.Trainers.Find(id);
+            if (trainer == null)
             {
                 return Back("tr");
             }
             if (_db.Bookings.Any(b => b.TrainerId == id))
             {
-                TempData["Err"] = "Нельзя удалить тренера «" + t.FullName + "»: на него есть записи. Сначала удалите или завершите эти заявки.";
-                return Back("tr");
+                return Fail("tr", "Нельзя удалить тренера «" + trainer.FullName + "»: на него есть записи.");
             }
 
-            foreach (var r in _db.Reviews.Where(x => x.TrainerId == id).ToList())
+            foreach (var review in _db.Reviews.Where(r => r.TrainerId == id))
             {
-                r.TrainerId = null;
+                review.TrainerId = null;
             }
-            DeleteUploadedPhoto(t.ImagePath);
-            _db.Trainers.Remove(t);
+            _db.Trainers.Remove(trainer);
             _db.SaveChanges();
 
-            TempData["Ok"] = "Тренер удалён.";
-            return Back("tr");
+            return Done("tr", "Тренер удалён.");
         }
-
-        // Удаляем файл только если его загрузили через админку (картинки сайта из img/ не трогаем)
-        private void DeleteUploadedPhoto(string? imagePath)
-        {
-            if (imagePath == null || !imagePath.StartsWith(TrainerPhotoDir) || imagePath.Contains(".."))
-            {
-                return;
-            }
-            var full = Path.Combine(_env.WebRootPath, imagePath.Replace('/', Path.DirectorySeparatorChar));
-            if (System.IO.File.Exists(full))
-            {
-                System.IO.File.Delete(full);
-            }
-        }
-
-        // ---------- Расписание ----------
 
         [HttpPost]
         public IActionResult AddTime(string? newTime)
         {
-            if (!TimeSpan.TryParse(newTime, out var time) || time < TimeSpan.Zero || time >= TimeSpan.FromHours(24))
+            if (!TimeSpan.TryParse(newTime, out var parsed) || parsed < TimeSpan.Zero || parsed >= TimeSpan.FromHours(24))
             {
-                TempData["Err"] = "Введите время в формате ЧЧ:ММ.";
-                return Back("sch");
+                return Fail("sch", "Введите время в формате ЧЧ:ММ.");
             }
-            time = new TimeSpan(time.Hours, time.Minutes, 0);
 
+            var time = new TimeSpan(parsed.Hours, parsed.Minutes, 0);
             if (_db.TimeSlots.Any(s => s.SlotTime == time))
             {
-                TempData["Err"] = "Такое время уже есть в списке.";
-                return Back("sch");
+                return Fail("sch", "Такое время уже есть в списке.");
             }
 
             _db.TimeSlots.Add(new TimeSlot { SlotTime = time });
             _db.SaveChanges();
 
-            TempData["Ok"] = "Время добавлено.";
-            return Back("sch");
+            return Done("sch", "Время добавлено.");
         }
 
         [HttpPost]
         public IActionResult DeleteTime(int id)
         {
-            var s = _db.TimeSlots.Find(id);
-            if (s != null)
+            var slot = _db.TimeSlots.Find(id);
+            if (slot != null)
             {
-                _db.TimeSlots.Remove(s);
+                _db.TimeSlots.Remove(slot);
                 _db.SaveChanges();
-                TempData["Ok"] = "Время убрано из расписания (уже созданные записи не меняются).";
             }
-            return Back("sch");
+            return Done("sch", "Время убрано из расписания.");
         }
 
         [HttpPost]
@@ -349,133 +279,115 @@ namespace FitZone.Controllers
             var day = newClosed.Date;
             if (day.Year < 2000)
             {
-                TempData["Err"] = "Выберите дату.";
-                return Back("sch");
+                return Fail("sch", "Выберите дату.");
             }
             if (_db.ClosedDays.Any(c => c.ClosedDate == day))
             {
-                TempData["Err"] = "Этот день уже закрыт.";
-                return Back("sch");
+                return Fail("sch", "Этот день уже закрыт.");
             }
 
             _db.ClosedDays.Add(new ClosedDay { ClosedDate = day });
             _db.SaveChanges();
 
-            TempData["Ok"] = "День закрыт для записи.";
-            return Back("sch");
+            return Done("sch", "День закрыт для записи.");
         }
 
         [HttpPost]
         public IActionResult DeleteClosedDay(int id)
         {
-            var c = _db.ClosedDays.Find(id);
-            if (c != null)
+            var day = _db.ClosedDays.Find(id);
+            if (day != null)
             {
-                _db.ClosedDays.Remove(c);
+                _db.ClosedDays.Remove(day);
                 _db.SaveChanges();
-                TempData["Ok"] = "День снова открыт для записи.";
             }
-            return Back("sch");
+            return Done("sch", "День снова открыт для записи.");
         }
-
-        // ---------- Пользователи и роли ----------
 
         [HttpPost]
         public IActionResult SaveRoles(IFormCollection form)
         {
-            var me = CurrentUserId();
-            var wanted = new Dictionary<int, string>();
-            foreach (var key in form.Keys)
+            var myId = GetUserId();
+            foreach (var user in _db.Users.Where(u => u.Id != myId).ToList())
             {
-                if (key.StartsWith("role_") && int.TryParse(key.Substring(5), out var id))
+                var role = form["role_" + user.Id].ToString();
+                if (Roles.All.Contains(role))
                 {
-                    wanted[id] = form[key].ToString();
-                }
-            }
-
-            var ids = wanted.Keys.ToList();
-            var rows = _db.Users.Where(u => ids.Contains(u.Id)).ToList();
-            var changed = 0;
-            foreach (var u in rows)
-            {
-                var role = wanted[u.Id];
-                // Свою роль менять нельзя, чтобы не лишить сайт последнего администратора
-                if (u.Id != me && Roles.All.Contains(role) && u.Role != role)
-                {
-                    u.Role = role;
-                    changed++;
+                    user.Role = role;
                 }
             }
             _db.SaveChanges();
 
-            TempData["Ok"] = changed > 0
-                ? "Роли сохранены. Пользователь получит новую роль при следующем входе."
-                : "Изменений в ролях нет.";
-            return Back("usr");
+            return Done("usr", "Роли сохранены. Пользователь получит новую роль при следующем входе.");
         }
 
         [HttpPost]
         public IActionResult DeleteUser(int id)
         {
-            if (id == CurrentUserId())
+            if (id == GetUserId())
             {
-                TempData["Err"] = "Свой аккаунт удалить нельзя.";
-                return Back("usr");
+                return Fail("usr", "Свой аккаунт удалить нельзя.");
             }
 
-            var u = _db.Users.Find(id);
-            if (u != null)
+            var user = _db.Users.Find(id);
+            if (user != null)
             {
-                // Записи пользователя удаляются вместе с ним (иначе их держит внешний ключ)
                 _db.Bookings.RemoveRange(_db.Bookings.Where(b => b.UserId == id));
-                _db.Users.Remove(u);
+                _db.Users.Remove(user);
                 _db.SaveChanges();
-                TempData["Ok"] = "Пользователь и его записи удалены.";
             }
-            return Back("usr");
+            return Done("usr", "Пользователь и его записи удалены.");
         }
-
-        // ---------- Контакты и настройки ----------
 
         [HttpPost]
         public IActionResult SaveSettings(string? address, string? phone, string? email, string? hours)
         {
-            var a = (address ?? "").Trim();
-            var p = (phone ?? "").Trim();
-            var e = (email ?? "").Trim();
-            var h = (hours ?? "").Trim();
+            var newAddress = (address ?? "").Trim();
+            var newPhone = (phone ?? "").Trim();
+            var newEmail = (email ?? "").Trim();
+            var newHours = (hours ?? "").Trim();
 
-            if (a.Length == 0 || p.Length == 0 || e.Length == 0 || h.Length == 0
-                || a.Length > 200 || p.Length > 50 || e.Length > 100 || h.Length > 200 || !e.Contains('@'))
+            if (newAddress.Length == 0 || newPhone.Length == 0 || newEmail.Length == 0 || newHours.Length == 0
+                || newAddress.Length > 200 || newPhone.Length > 50 || newEmail.Length > 100 || newHours.Length > 200
+                || !newEmail.Contains('@'))
             {
-                TempData["Err"] = "Заполните все поля контактов (e-mail должен содержать @).";
-                return Back("set");
+                return Fail("set", "Заполните все поля контактов (e-mail должен содержать @).");
             }
 
-            var c = _db.Contacts.FirstOrDefault();
-            if (c == null)
+            var contact = _db.Contacts.FirstOrDefault();
+            if (contact == null)
             {
-                c = new Contact();
-                _db.Contacts.Add(c);
+                contact = new Contact();
+                _db.Contacts.Add(contact);
             }
-            c.Address = a;
-            c.Phone = p;
-            c.Email = e;
-            c.WorkingHours = h;
+
+            contact.Address = newAddress;
+            contact.Phone = newPhone;
+            contact.Email = newEmail;
+            contact.WorkingHours = newHours;
             _db.SaveChanges();
 
-            TempData["Ok"] = "Контакты сохранены: они обновились на всех страницах сайта.";
-            return Back("set");
+            return Done("set", "Контакты сохранены: они обновились на всех страницах сайта.");
         }
-
-        // ---------- Вспомогательное ----------
 
         private IActionResult Back(string tab)
         {
             return RedirectToAction("Index", new { tab });
         }
 
-        private int CurrentUserId()
+        private IActionResult Done(string tab, string message)
+        {
+            TempData["Ok"] = message;
+            return Back(tab);
+        }
+
+        private IActionResult Fail(string tab, string message)
+        {
+            TempData["Err"] = message;
+            return Back(tab);
+        }
+
+        private int GetUserId()
         {
             int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id);
             return id;

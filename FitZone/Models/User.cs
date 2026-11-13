@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // Таблица Users (пользователи сайта)
     public class User
     {
         public int Id { get; set; }

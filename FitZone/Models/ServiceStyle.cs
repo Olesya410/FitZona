@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // В БД нет цвета и иконки карточки, поэтому берём их по порядковому номеру услуги
     public static class ServiceStyle
     {
         private static readonly string[] Colors = { "dark", "mint", "pink", "milk", "dark", "mint" };

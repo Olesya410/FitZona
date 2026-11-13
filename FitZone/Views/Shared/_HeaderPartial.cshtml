@@ -1,6 +1,4 @@
 @{
-    // Текст и страница кнопки справа. Страницы кабинетов (Account, Manager, Admin) задают их через ViewData.
-    // На остальных страницах: «Войти» для гостя и кабинет по роли для вошедшего.
     var cabinetText = ViewData["CabinetText"] as string ?? "";
     var cabinetAction = ViewData["CabinetAction"] as string ?? "";
     if (cabinetText == "" || cabinetAction == "")

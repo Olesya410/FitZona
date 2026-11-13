@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // Таблица Bookings (записи на тренировки)
     public class Booking
     {
         public int Id { get; set; }

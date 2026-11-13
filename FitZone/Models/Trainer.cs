@@ -1,6 +1,5 @@
 namespace FitZone.Models
 {
-    // Таблица Trainers (тренеры)
     public class Trainer
     {
         public int Id { get; set; }

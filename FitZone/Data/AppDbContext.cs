@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FitZone.Data
 {
-    // Контекст базы данных: каждая строка DbSet — это таблица в fitzoneDB
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
@@ -18,5 +17,6 @@ namespace FitZone.Data
         public DbSet<Booking> Bookings => Set<Booking>();
         public DbSet<TimeSlot> TimeSlots => Set<TimeSlot>();
         public DbSet<ClosedDay> ClosedDays => Set<ClosedDay>();
+        public DbSet<Feedback> Feedbacks => Set<Feedback>();
     }
 }
